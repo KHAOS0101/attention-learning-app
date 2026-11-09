@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Um dashboard de psicologia aplicada à aprendizagem para acompanhar hábitos, emoções e bem-estar estudantil." />
+    <title>Dashboard · Attention Learning</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-page="dashboard">
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="index.html"><span class="brand-mark">A</span><span>Attention Learning</span></a>
+        <nav class="main-nav" aria-label="Navegação principal">
+          <a href="index.html">Início</a>
+          <a href="dashboard.html" aria-current="page">Dashboard</a>
+          <a href="comunidade.html">Comunidade</a>
+        </nav>
+        <a class="btn btn-primary" href="cadastro.html">Editar perfil</a>
+      </div>
+    </header>
+    <main>
+      <section class="section dashboard-page">
+        <div class="container">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow" id="todayLabel">Psicologia e aprendizagem</p>
+              <h1>Olá, <span id="dashboardName">estudante</span> 👋</h1>
+              <p class="lead" id="dashboardCampus">Observe seus hábitos e cuide do seu ritmo de aprendizagem.</p>
+            </div>
+            <a class="btn btn-secondary" href="comunidade.html">Encontrar um grupo</a>
+          </div>
+          <p class="storage-notice">Protótipo: seus dados ficam salvos localmente neste navegador.</p>
+          <p class="psychology-disclaimer">Este painel apoia o autoconhecimento e não oferece diagnóstico nem substitui acompanhamento psicológico.</p>
+          <p class="form-message" id="storageError" role="alert" hidden></p>
+          <div class="stats-grid dashboard-stats">
+            <article><strong id="sessionsCount">0</strong><span>Sessões de foco hoje</span></article>
+            <article><strong id="focusMinutes">0 min</strong><span>Tempo focado hoje</span></article>
+            <article><strong id="sleepSummary">—</strong><span>Sono registrado</span></article>
+            <article><strong id="goalSummary">0/3</strong><span>Metas concluídas</span></article>
+          </div>
+
+          <div class="dashboard-grid dashboard-workspace">
+            <section class="panel timer-panel" aria-labelledby="timerTitle">
+              <div class="panel-header"><h2 id="timerTitle">Pomodoro</h2><span id="timerModeLabel">Foco</span></div>
+              <p class="muted-copy">Escolha um bloco e comece quando estiver pronto.</p>
+              <div class="timer-display" id="pomodoroTimer" aria-live="off">25:00</div>
+              <div class="timer-presets" role="group" aria-label="Duração do Pomodoro">
+                <button class="preset-button is-active" type="button" data-mode="focus">Foco · 25 min</button>
+                <button class="preset-button" type="button" data-mode="break">Pausa · 5 min</button>
+              </div>
+              <div class="timer-actions">
+                <button class="btn btn-primary" id="timerStart" type="button">Iniciar foco</button>
+                <button class="btn btn-secondary" id="timerReset" type="button">Reiniciar</button>
+              </div>
+              <p class="form-message" id="timerMessage" role="status" aria-live="polite"></p>
+            </section>
+
+            <section class="panel" aria-labelledby="goalsTitle">
+              <div class="panel-header"><h2 id="goalsTitle">Metas de hoje</h2><span>Salvas automaticamente</span></div>
+              <div class="goal-list" id="goalList">
+                <label class="goal-item"><input type="checkbox" data-goal="study" /><span><strong>Fazer uma sessão de foco</strong><small>Comece com 25 minutos</small></span></label>
+                <label class="goal-item"><input type="checkbox" data-goal="review" /><span><strong>Revisar um conteúdo</strong><small>Use flashcards ou repetição espaçada</small></span></label>
+                <label class="goal-item"><input type="checkbox" data-goal="pause" /><span><strong>Fazer uma pausa ativa</strong><small>Alongue-se entre os blocos</small></span></label>
+              </div>
+              <div class="custom-goal-list" id="customGoalList"></div>
+              <form class="custom-goal-form" id="customGoalForm">
+                <label for="customGoalInput">Adicionar uma meta sua</label>
+                <div class="custom-goal-controls">
+                  <input id="customGoalInput" name="goal" type="text" maxlength="100" placeholder="Ex.: Ler 10 páginas" required />
+                  <button class="btn btn-primary" type="submit">Adicionar meta</button>
+                </div>
+                <p class="form-message" id="customGoalMessage" role="status" aria-live="polite"></p>
+              </form>
+            </section>
+          </div>
+
+          <div class="split-layout dashboard-lower">
+            <section class="panel" aria-labelledby="diaryTitle">
+              <div class="panel-header"><h2 id="diaryTitle">Check-in emocional</h2><span>Hoje</span></div>
+              <form id="diaryForm" class="diary-form">
+                <label for="sleepHours">Horas de sono</label>
+                <input id="sleepHours" name="sleepHours" type="number" min="0" max="24" step="0.5" placeholder="Ex.: 7.5" required />
+                <label for="mood">Como está seu humor?</label>
+                <select id="mood" name="mood" required>
+                  <option value="">Selecione</option>
+                  <option>😊 Feliz</option>
+                  <option>🤩 Animado</option>
+                  <option>💪 Motivado</option>
+                  <option>😌 Tranquilo</option>
+                  <option>🙏 Grato</option>
+                  <option>😎 Confiante</option>
+                  <option>🙂 Bem</option>
+                  <option>😐 Neutro</option>
+                  <option>😴 Cansado</option>
+                  <option>😟 Ansioso</option>
+                  <option>😣 Estressado</option>
+                  <option>😢 Triste</option>
+                  <option>😤 Frustrado</option>
+                  <option>✨ Ótimo</option>
+                </select>
+                <label for="focusScore">Foco percebido: <output id="focusOutput">3</output>/5</label>
+                <input id="focusScore" name="focusScore" type="range" min="1" max="5" value="3" />
+                <button class="btn btn-primary" type="submit">Salvar registro</button>
+                <p class="form-message" id="diaryMessage" role="status" aria-live="polite"></p>
+              </form>
+            </section>
+            <section class="panel" aria-labelledby="progressTitle">
+              <div class="panel-header"><h2 id="progressTitle">Seu progresso</h2><span>Hoje</span></div>
+              <div id="progressBoard" class="progress-board"></div>
+            </section>
+          </div>
+
+          <section class="panel journal-panel" aria-labelledby="journalTitle">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Um espaço só seu</p>
+                <h2 id="journalTitle">Quer colocar algo para fora?</h2>
+              </div>
+              <span>Escrita livre</span>
+            </div>
+            <p class="muted-copy">Você pode desabafar, compartilhar uma opinião ou registrar o que está passando pela sua cabeça. Não precisa escrever bonito nem encontrar uma solução agora.</p>
+            <form id="journalForm" class="journal-form">
+              <label for="journalEntry">O que você gostaria de expressar?</label>
+              <textarea id="journalEntry" name="entry" rows="6" maxlength="3000" placeholder="Escreva no seu tempo. O que tem ocupado seus pensamentos hoje?" required></textarea>
+              <div class="journal-form-footer">
+                <span id="journalCharCount">0/3000</span>
+                <button class="btn btn-primary" type="submit">Guardar no meu diário</button>
+              </div>
+              <p class="form-message" id="journalMessage" role="status" aria-live="polite"></p>
+            </form>
+            <p class="journal-privacy">Seus textos ficam salvos apenas neste navegador, não são enviados nem monitorados. Se este dispositivo for compartilhado, outras pessoas com acesso a ele podem ler ou apagar seus registros. Este espaço não substitui apoio psicológico; se precisar de ajuda imediata, procure alguém de confiança ou um serviço de emergência.</p>
+            <div class="journal-history">
+              <h3>Seus registros</h3>
+              <div id="journalEntries" class="journal-entries"></div>
+              <p id="journalEmpty" class="empty-state">Seus textos aparecerão aqui. Só você decide o que registrar.</p>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <div class="container footer-row"><p>© <span data-current-year></span> Attention Learning</p><p>Seu ritmo também é progresso.</p></div>
+    </footer>
+    <script src="script.js"></script>
+  </body>
+</html>
