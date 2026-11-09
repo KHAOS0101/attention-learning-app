@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <a class="skip-link" href="#main-content">Pular para o conteúdo principal</a>
     <header class="site-header">
       <div class="container nav-wrap">
         <div class="brand">
@@ -28,12 +29,13 @@
           <a href="#features">Recursos</a>
           <a href="dashboard.html">Dashboard</a>
           <a href="comunidade.html">Comunidade</a>
+          <a href="apoio.html">Apoio</a>
         </nav>
         <a class="btn btn-primary" href="cadastro.html">Criar conta</a>
       </div>
     </header>
 
-    <main>
+    <main id="main-content" tabindex="-1">
       <section class="hero">
         <div class="container hero-grid">
           <div class="hero-copy">
@@ -119,6 +121,17 @@
         </div>
       </section>
 
+      <section class="section support-invitation">
+        <div class="container support-invitation-card">
+          <div>
+            <p class="eyebrow">Você não precisa lidar com tudo só</p>
+            <h2>Conheça caminhos confiáveis para buscar apoio.</h2>
+            <p>O aplicativo é educativo. Se quiser conversar ou procurar atendimento em saúde mental, veja opções gratuitas e serviços do SUS.</p>
+          </div>
+          <a class="btn btn-primary" href="apoio.html">Ver opções de apoio</a>
+        </div>
+      </section>
+
       <section id="dashboard" class="section alt-bg">
         <div class="container dashboard-grid">
           <div class="panel overview-panel">
@@ -190,6 +203,7 @@
       <div class="container footer-row">
         <p>© <span id="currentYear"></span> Attention Learning</p>
         <p>Psicologia, aprendizagem e bem-estar estudantil.</p>
+        <a href="apoio.html">Encontrar apoio</a>
       </div>
     </footer>
 

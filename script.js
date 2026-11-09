@@ -9,6 +9,7 @@ const initialState = {
   dailyLogs: {},
   journalEntries: [],
   joinedGroups: [],
+  pomodoro: { focusMinutes: 25, breakMinutes: 5 },
 };
 
 const defaultGoalLabels = {
@@ -45,6 +46,13 @@ function readState() {
     Object.keys(savedGoals).forEach((id) => { savedGoals[id] = false; });
     customGoals.forEach((goal) => { goal.completed = false; });
   }
+  const savedPomodoro = parsed.pomodoro || {};
+  const pomodoro = {
+    focusMinutes: Number.isInteger(savedPomodoro.focusMinutes) && savedPomodoro.focusMinutes >= 5 && savedPomodoro.focusMinutes <= 90
+      ? savedPomodoro.focusMinutes : initialState.pomodoro.focusMinutes,
+    breakMinutes: Number.isInteger(savedPomodoro.breakMinutes) && savedPomodoro.breakMinutes >= 1 && savedPomodoro.breakMinutes <= 30
+      ? savedPomodoro.breakMinutes : initialState.pomodoro.breakMinutes,
+  };
 
   return {
     ...JSON.parse(JSON.stringify(initialState)),
@@ -58,6 +66,7 @@ function readState() {
       : [],
     sessions: Array.isArray(parsed.sessions) ? parsed.sessions : [],
     joinedGroups: Array.isArray(parsed.joinedGroups) ? parsed.joinedGroups : [],
+    pomodoro,
   };
 }
 
@@ -265,12 +274,114 @@ function setupDashboard() {
     };
     if (!saveState()) return;
     document.getElementById('diaryMessage').textContent = 'Registro salvo neste navegador.';
+    setupWeeklyTrends();
     refreshDashboardStats();
   });
 
   setupJournal();
+  setupPrivacyControls();
+  setupWeeklyTrends();
   setupTimer();
   refreshDashboardStats();
+}
+
+function setupPrivacyControls() {
+  const exportButton = document.getElementById('exportData');
+  const deleteButton = document.getElementById('deleteData');
+  if (!exportButton || !deleteButton) return;
+
+  const message = document.getElementById('privacyMessage');
+  exportButton.addEventListener('click', () => {
+    try {
+      const exportData = {
+        app: 'Attention Learning',
+        exportedAt: new Date().toISOString(),
+        note: 'Exportação de dados armazenados localmente pelo protótipo.',
+        data: state,
+      };
+      const file = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(file);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `attention-learning-dados-${todayKey()}.json`;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      message.textContent = 'Cópia dos seus dados exportada. Guarde o arquivo em local seguro.';
+    } catch (error) {
+      console.error('Não foi possível exportar os dados.', error);
+      message.textContent = 'Não foi possível exportar os dados. Tente novamente neste navegador.';
+    }
+  });
+
+  deleteButton.addEventListener('click', () => {
+    const confirmed = window.confirm('Apagar definitivamente todos os dados do Attention Learning salvos neste navegador? Esta ação não pode ser desfeita.');
+    if (!confirmed) return;
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      state = JSON.parse(JSON.stringify(initialState));
+      window.location.reload();
+    } catch (error) {
+      console.error('Não foi possível apagar os dados locais.', error);
+      message.textContent = 'Não foi possível apagar os dados. Tente novamente ou remova os dados do site nas configurações do navegador.';
+    }
+  });
+}
+
+function setupWeeklyTrends() {
+  const body = document.getElementById('weeklyTrend');
+  if (!body) return;
+  body.replaceChildren();
+  let recordedDays = 0;
+  const today = new Date();
+
+  for (let daysAgo = 6; daysAgo >= 0; daysAgo -= 1) {
+    const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() - daysAgo);
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const log = state.dailyLogs[key];
+    if (log) recordedDays += 1;
+
+    const row = document.createElement('tr');
+    const dayCell = document.createElement('th');
+    dayCell.scope = 'row';
+    dayCell.textContent = new Intl.DateTimeFormat('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' }).format(date);
+    row.append(dayCell);
+
+    const moodCell = document.createElement('td');
+    moodCell.textContent = log?.mood || '—';
+    row.append(moodCell);
+
+    const sleepCell = document.createElement('td');
+    sleepCell.textContent = log ? `${log.sleepHours} h` : '—';
+    if (log) {
+      const sleepTrack = document.createElement('span');
+      sleepTrack.className = 'trend-meter';
+      sleepTrack.setAttribute('aria-hidden', 'true');
+      const sleepFill = document.createElement('span');
+      sleepFill.className = 'trend-meter-fill sleep-meter-fill';
+      sleepFill.style.width = `${Math.min(100, (Number(log.sleepHours) / 12) * 100)}%`;
+      sleepTrack.append(sleepFill);
+      sleepCell.append(sleepTrack);
+    }
+    row.append(sleepCell);
+
+    const focusCell = document.createElement('td');
+    focusCell.textContent = log ? `${log.focusScore}/5` : '—';
+    if (log) {
+      const focusTrack = document.createElement('span');
+      focusTrack.className = 'trend-meter';
+      focusTrack.setAttribute('aria-hidden', 'true');
+      const focusFill = document.createElement('span');
+      focusFill.className = 'trend-meter-fill focus-meter-fill';
+      focusFill.style.width = `${Math.min(100, (Number(log.focusScore) / 5) * 100)}%`;
+      focusTrack.append(focusFill);
+      focusCell.append(focusTrack);
+    }
+    row.append(focusCell);
+    body.append(row);
+  }
+  document.getElementById('trendEmpty').hidden = recordedDays > 0;
 }
 
 function setupJournal() {
@@ -414,10 +525,17 @@ function setupTimer() {
   const startButton = document.getElementById('timerStart');
   const resetButton = document.getElementById('timerReset');
   const message = document.getElementById('timerMessage');
-  const modes = { focus: 25, break: 5 };
+  const modes = {
+    focus: state.pomodoro.focusMinutes,
+    break: state.pomodoro.breakMinutes,
+  };
   let mode = 'focus';
   let secondsLeft = modes[mode] * 60;
   let intervalId = null;
+  const settingsForm = document.getElementById('timerSettingsForm');
+  settingsForm.elements.focusDuration.value = modes.focus;
+  settingsForm.elements.breakDuration.value = modes.break;
+  updatePresetLabels();
 
   function renderTime() {
     timer.textContent = `${String(Math.floor(secondsLeft / 60)).padStart(2, '0')}:${String(secondsLeft % 60).padStart(2, '0')}`;
@@ -434,6 +552,35 @@ function setupTimer() {
     message.textContent = '';
     renderTime();
   }
+
+  function updatePresetLabels() {
+    document.querySelector('[data-mode="focus"]').textContent = `Foco · ${modes.focus} min`;
+    document.querySelector('[data-mode="break"]').textContent = `Pausa · ${modes.break} min`;
+  }
+
+  settingsForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (intervalId) {
+      message.textContent = 'Pause o temporizador antes de alterar as durações.';
+      return;
+    }
+    const updatedPomodoro = {
+      focusMinutes: Number(settingsForm.elements.focusDuration.value),
+      breakMinutes: Number(settingsForm.elements.breakDuration.value),
+    };
+    const previousPomodoro = state.pomodoro;
+    state.pomodoro = updatedPomodoro;
+    if (!saveState()) {
+      state.pomodoro = previousPomodoro;
+      return;
+    }
+    modes.focus = updatedPomodoro.focusMinutes;
+    modes.break = updatedPomodoro.breakMinutes;
+    secondsLeft = modes[mode] * 60;
+    updatePresetLabels();
+    renderTime();
+    document.getElementById('timerSettingsMessage').textContent = 'Durações atualizadas e salvas neste navegador.';
+  });
 
   document.querySelectorAll('[data-mode]').forEach((button) => {
     button.addEventListener('click', () => setMode(button.dataset.mode));

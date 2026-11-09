@@ -28,7 +28,7 @@ jobs:
       - name: Prepare static site
         run: |
           mkdir site
-          cp index.html cadastro.html dashboard.html comunidade.html styles.css script.js site/
+          cp index.html cadastro.html dashboard.html comunidade.html apoio.html styles.css script.js site/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
