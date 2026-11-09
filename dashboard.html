@@ -4,10 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Um dashboard de psicologia aplicada à aprendizagem para acompanhar hábitos, emoções e bem-estar estudantil." />
+    <meta name="theme-color" content="#211a45" />
     <title>Dashboard · Attention Learning</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="app-icon-192.png" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body data-page="dashboard">
@@ -146,6 +149,31 @@
             <p id="trendEmpty" class="empty-state" hidden>Ainda não há registros neste período. Você pode começar com o check-in diário, no seu tempo.</p>
           </section>
 
+          <section class="panel reminders-panel" aria-labelledby="remindersTitle">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Opcional e ajustável</p>
+                <h2 id="remindersTitle">Lembretes de pausa</h2>
+              </div>
+            </div>
+            <p class="muted-copy">Escolha se quer receber um lembrete para fazer uma pausa. Ele funciona enquanto este dashboard estiver aberto; notificações dependem das permissões do navegador.</p>
+            <form id="remindersForm" class="reminders-form">
+              <label class="reminder-toggle" for="remindersEnabled">
+                <input id="remindersEnabled" name="enabled" type="checkbox" />
+                <span>Ativar lembretes neste dispositivo</span>
+              </label>
+              <label for="reminderInterval">Lembrar a cada</label>
+              <select id="reminderInterval" name="intervalMinutes">
+                <option value="30">30 minutos</option>
+                <option value="45">45 minutos</option>
+                <option value="60" selected>1 hora</option>
+                <option value="90">1 hora e 30 minutos</option>
+              </select>
+              <button class="btn btn-secondary" type="submit">Salvar preferências</button>
+            </form>
+            <p id="reminderStatus" class="form-message" role="status" aria-live="polite"></p>
+          </section>
+
           <section class="panel journal-panel" aria-labelledby="journalTitle">
             <div class="panel-header">
               <div>
@@ -176,13 +204,15 @@
             <div>
               <p class="eyebrow">Privacidade e controle</p>
               <h2 id="privacyTitle">Seus dados são seus.</h2>
-              <p>Este protótipo guarda informações somente no armazenamento local deste navegador; não há conta, nuvem ou envio para a equipe. Exportar baixa uma cópia JSON de todos os dados do app. Apagar remove o perfil, metas, registros, diário e grupos salvos deste navegador.</p>
+              <p>Este protótipo guarda informações somente no armazenamento local deste navegador; não há conta, nuvem ou envio para a equipe. Exportar baixa uma cópia JSON de todos os dados do app. Restaurar substitui os dados atuais por uma cópia JSON criada pelo Attention Learning. Apagar remove o perfil, metas, registros, diário e grupos salvos deste navegador.</p>
             </div>
             <div class="privacy-actions">
               <button class="btn btn-secondary" id="exportData" type="button">Exportar meus dados</button>
+              <button class="btn btn-secondary" id="importData" type="button">Restaurar de um arquivo</button>
+              <input id="importDataFile" class="visually-hidden" type="file" accept=".json,application/json" aria-label="Escolher arquivo JSON de exportação" />
               <button class="btn btn-danger" id="deleteData" type="button">Apagar todos os meus dados</button>
             </div>
-            <p class="form-message" id="privacyMessage" role="status" aria-live="polite"></p>
+            <p class="form-message" id="privacyMessage" role="status" aria-live="polite">Você também pode apagar registros do diário individualmente, usando o botão “Apagar” em cada texto.</p>
           </section>
         </div>
       </section>

@@ -8,12 +8,15 @@
       name="description"
       content="Attention Learning é um aplicativo de psicologia aplicada à aprendizagem e ao bem-estar estudantil, com ferramentas de autoconhecimento e hábitos de estudo."
     />
+    <meta name="theme-color" content="#211a45" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
       rel="stylesheet"
     />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="app-icon-192.png" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -49,31 +52,31 @@
               <a class="btn btn-primary" href="cadastro.html">Começar agora</a>
               <a class="btn btn-secondary" href="dashboard.html">Ver dashboard</a>
             </div>
-            <ul class="hero-pills" aria-label="Principais indicadores">
-              <li>+84% foco</li>
-              <li>7h40min sono</li>
-              <li>4 grupos ativos</li>
+            <ul class="hero-pills" aria-label="Recursos do aplicativo">
+              <li>Pomodoro personalizável</li>
+              <li>Check-in de bem-estar</li>
+              <li>Metas no seu ritmo</li>
             </ul>
           </div>
 
-          <div class="hero-card" aria-label="Resumo do aluno">
+          <div class="hero-card" role="group" aria-label="Exemplo de recursos do aplicativo">
             <div class="card-topline">
               <span class="status-dot"></span>
-              <span>Hoje</span>
+              <span>Seu espaço</span>
             </div>
             <div class="student-profile">
               <div class="avatar">AL</div>
               <div>
-                <h2 id="studentName">Ana Luíza</h2>
-                <p id="studentCampus">Campus Central</p>
+                <h2 id="studentName">Aprendizagem</h2>
+                <p id="studentCampus">Um passo de cada vez</p>
               </div>
             </div>
 
             <div class="metric-list" id="heroMetrics"></div>
 
             <div class="resolution-box">
-              <span>Meta do dia</span>
-              <strong>3 sessões de foco + 1 revisão</strong>
+              <span>Seu progresso</span>
+              <strong>Construído no seu próprio ritmo</strong>
             </div>
           </div>
         </div>
@@ -81,22 +84,10 @@
 
       <section id="overview" class="stats-band">
         <div class="container stats-grid">
-          <article>
-            <strong>25 min</strong>
-            <span>Pomodoro</span>
-          </article>
-          <article>
-            <strong>84%</strong>
-            <span>Foco médio</span>
-          </article>
-          <article>
-            <strong>7.4h</strong>
-            <span>Sono</span>
-          </article>
-          <article>
-            <strong>12</strong>
-            <span>Metas concluídas</span>
-          </article>
+          <article><strong>Foco</strong><span>Blocos ajustáveis</span></article>
+          <article><strong>Emoções</strong><span>Check-in opcional</span></article>
+          <article><strong>Hábitos</strong><span>Observe seus registros</span></article>
+          <article><strong>Privacidade</strong><span>Dados no dispositivo</span></article>
         </div>
       </section>
 
@@ -132,6 +123,18 @@
         </div>
       </section>
 
+      <section class="section install-invitation" aria-labelledby="installTitle">
+        <div class="container install-card">
+          <div>
+            <p class="eyebrow">Leve seu espaço de estudos com você</p>
+            <h2 id="installTitle">Instale o Attention Learning no seu dispositivo.</h2>
+            <p>Depois da primeira visita, as páginas principais também ficam disponíveis sem conexão. Seus dados continuam salvos apenas neste navegador.</p>
+            <p id="installHelp" class="install-help">Se o botão não aparecer, use a opção “Instalar app” ou “Adicionar à tela inicial” no menu do navegador.</p>
+          </div>
+          <button class="btn btn-primary" id="installAppButton" type="button" hidden>Instalar aplicativo</button>
+        </div>
+      </section>
+
       <section id="dashboard" class="section alt-bg">
         <div class="container dashboard-grid">
           <div class="panel overview-panel">
@@ -142,8 +145,8 @@
             <div class="ring-wrap">
               <div class="ring-chart">
                 <div>
-                  <strong>84%</strong>
-                  <span>Concentração</span>
+                  <strong>25 min</strong>
+                  <span>Exemplo de bloco</span>
                 </div>
               </div>
             </div>
@@ -153,7 +156,7 @@
           <div class="panel timer-panel">
             <div class="panel-header">
               <h3>Pomodoro</h3>
-              <span>Em andamento</span>
+              <span>Ritmo personalizável</span>
             </div>
             <div class="timer-display" id="pomodoroTimer">25:00</div>
             <div class="timer-actions">
@@ -180,9 +183,10 @@
 
           <div class="panel community-panel" id="community">
             <div class="panel-header">
-              <h3>Conexão estudantil</h3>
+              <h3>Exemplos de grupos de estudo</h3>
               <a href="comunidade.html">Ver todos os grupos</a>
             </div>
+            <p class="muted-copy">Os grupos, horários e participantes são demonstrativos, não atividades reais.</p>
             <div id="studyGroups" class="group-list"></div>
           </div>
         </div>
