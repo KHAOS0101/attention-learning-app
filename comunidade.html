@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Encontre grupos de estudo e fortaleça seu bem-estar e senso de conexão com outros estudantes." />
+    <title>Comunidade · Attention Learning</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-page="community">
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="index.html"><span class="brand-mark">A</span><span>Attention Learning</span></a>
+        <nav class="main-nav" aria-label="Navegação principal">
+          <a href="index.html">Início</a>
+          <a href="dashboard.html">Dashboard</a>
+          <a href="comunidade.html" aria-current="page">Comunidade</a>
+        </nav>
+        <a class="btn btn-primary" href="cadastro.html">Criar perfil</a>
+      </div>
+    </header>
+    <main>
+      <section class="section">
+        <div class="container">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">Conexão e bem-estar estudantil</p>
+              <h1>Encontre seu grupo de estudos.</h1>
+              <p class="lead">Explore grupos de demonstração e salve aqueles que combinam com você.</p>
+            </div>
+            <a class="btn btn-secondary" href="dashboard.html">Voltar ao dashboard</a>
+          </div>
+          <p class="storage-notice">Protótipo: sua participação é guardada localmente e não envia convites a outras pessoas.</p>
+          <p class="form-message" id="storageError" role="alert" hidden></p>
+          <div class="community-tools">
+            <label class="search-field" for="groupSearch"><span>Buscar por grupo ou disciplina</span><input id="groupSearch" type="search" placeholder="Ex.: Biologia" /></label>
+            <label class="search-field" for="subjectFilter"><span>Filtrar disciplina</span>
+              <select id="subjectFilter"><option value="">Todas as disciplinas</option></select>
+            </label>
+          </div>
+          <p id="groupCount" class="muted-copy" aria-live="polite"></p>
+          <div id="allStudyGroups" class="community-grid"></div>
+          <p id="emptyGroups" class="empty-state" hidden>Nenhum grupo encontrado. Tente outra busca.</p>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <div class="container footer-row"><p>© <span data-current-year></span> Attention Learning</p><p>Estudar junto também é aprender.</p></div>
+    </footer>
+    <script src="script.js"></script>
+  </body>
+</html>

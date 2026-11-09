@@ -1,6 +1,6 @@
 # Attention Learning App
 
-Aplicativo Android para acompanhamento da atenção, aprendizagem, saúde e conexão estudantil.
+Aplicativo de psicologia aplicada à aprendizagem e ao bem-estar estudantil, com ferramentas de autoconhecimento sobre atenção, emoções e hábitos de estudo. O protótipo oferece apoio educativo e não substitui avaliação, diagnóstico ou acompanhamento psicológico profissional.
 
 ## Stack
 - Kotlin
@@ -28,10 +28,20 @@ Aplicativo Android para acompanhamento da atenção, aprendizagem, saúde e cone
 - `app/src/main/res/` — recursos do app
 
 ## Como rodar
+
+### Site web
+Site público: https://khaos0101.github.io/attention-learning-app/
+
+1. Execute `open-site.bat`; o atalho inicia o servidor local do Windows e abre o navegador.
+2. Se preferir, execute `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\serve-site.ps1` na raiz do projeto e acesse `http://127.0.0.1:8000`.
+3. Encerre o servidor com `Ctrl+C` na janela do PowerShell.
+
+O site inclui landing page (`index.html`), cadastro demonstrativo (`cadastro.html`), dashboard (`dashboard.html`) e comunidade (`comunidade.html`). Cadastro, metas, sessões do Pomodoro, registros diários, textos do diário pessoal e grupos salvos usam o armazenamento local do navegador; não há autenticação real nem sincronização com servidor. O diário pessoal não é monitorado; em dispositivos compartilhados, outras pessoas com acesso ao navegador podem ler os registros.
+
+### App Android
 1. Abra no Android Studio
 2. Aguarde sincronizar Gradle
 3. Execute o app em um emulador ou dispositivo Android
 
 ## Observações
-Este repositório foi inicializado com a base do MVP para facilitar o desenvolvimento do protótipo.
-
+Este repositório foi inicializado com a base do MVP para facilitar o desenvolvimento do protótipo e também foi adaptado para uma versão em site.
