@@ -3,7 +3,7 @@ name: Publish student website
 on:
   push:
     branches:
-      - khaos0101-site-transform
+      - main
   workflow_dispatch:
 
 permissions:
