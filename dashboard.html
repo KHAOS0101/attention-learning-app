@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body data-page="dashboard">
+    <a class="skip-link" href="#main-content">Pular para o conteúdo principal</a>
     <header class="site-header">
       <div class="container nav-wrap">
         <a class="brand" href="index.html"><span class="brand-mark">A</span><span>Attention Learning</span></a>
@@ -18,11 +19,12 @@
           <a href="index.html">Início</a>
           <a href="dashboard.html" aria-current="page">Dashboard</a>
           <a href="comunidade.html">Comunidade</a>
+          <a href="apoio.html">Apoio</a>
         </nav>
         <a class="btn btn-primary" href="cadastro.html">Editar perfil</a>
       </div>
     </header>
-    <main>
+    <main id="main-content" tabindex="-1">
       <section class="section dashboard-page">
         <div class="container">
           <div class="page-heading">
@@ -57,6 +59,17 @@
                 <button class="btn btn-secondary" id="timerReset" type="button">Reiniciar</button>
               </div>
               <p class="form-message" id="timerMessage" role="status" aria-live="polite"></p>
+              <details class="timer-settings">
+                <summary>Personalizar duração</summary>
+                <form id="timerSettingsForm" class="timer-settings-form">
+                  <label for="focusDuration">Foco (minutos)</label>
+                  <input id="focusDuration" name="focusDuration" type="number" min="5" max="90" step="1" value="25" required />
+                  <label for="breakDuration">Pausa (minutos)</label>
+                  <input id="breakDuration" name="breakDuration" type="number" min="1" max="30" step="1" value="5" required />
+                  <button class="btn btn-secondary" type="submit">Salvar duração</button>
+                  <p class="form-message" id="timerSettingsMessage" role="status" aria-live="polite"></p>
+                </form>
+              </details>
             </section>
 
             <section class="panel" aria-labelledby="goalsTitle">
@@ -114,6 +127,25 @@
             </section>
           </div>
 
+          <section class="panel trends-panel" aria-labelledby="trendsTitle">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Observação pessoal</p>
+                <h2 id="trendsTitle">Seus últimos 7 dias</h2>
+              </div>
+              <span>Sem avaliações ou diagnósticos</span>
+            </div>
+            <p class="muted-copy">Veja os registros que você escolheu fazer. Os espaços sem dados ficam em branco — não existe uma meta ideal aqui.</p>
+            <div class="trend-table-wrap" tabindex="0" role="region" aria-label="Tabela de registros dos últimos sete dias">
+              <table class="trend-table">
+                <caption>Humor, horas de sono e foco registrados nos últimos sete dias</caption>
+                <thead><tr><th scope="col">Dia</th><th scope="col">Humor</th><th scope="col">Sono</th><th scope="col">Foco percebido</th></tr></thead>
+                <tbody id="weeklyTrend"></tbody>
+              </table>
+            </div>
+            <p id="trendEmpty" class="empty-state" hidden>Ainda não há registros neste período. Você pode começar com o check-in diário, no seu tempo.</p>
+          </section>
+
           <section class="panel journal-panel" aria-labelledby="journalTitle">
             <div class="panel-header">
               <div>
@@ -139,11 +171,24 @@
               <p id="journalEmpty" class="empty-state">Seus textos aparecerão aqui. Só você decide o que registrar.</p>
             </div>
           </section>
+
+          <section class="panel privacy-panel" aria-labelledby="privacyTitle">
+            <div>
+              <p class="eyebrow">Privacidade e controle</p>
+              <h2 id="privacyTitle">Seus dados são seus.</h2>
+              <p>Este protótipo guarda informações somente no armazenamento local deste navegador; não há conta, nuvem ou envio para a equipe. Exportar baixa uma cópia JSON de todos os dados do app. Apagar remove o perfil, metas, registros, diário e grupos salvos deste navegador.</p>
+            </div>
+            <div class="privacy-actions">
+              <button class="btn btn-secondary" id="exportData" type="button">Exportar meus dados</button>
+              <button class="btn btn-danger" id="deleteData" type="button">Apagar todos os meus dados</button>
+            </div>
+            <p class="form-message" id="privacyMessage" role="status" aria-live="polite"></p>
+          </section>
         </div>
       </section>
     </main>
     <footer class="site-footer">
-      <div class="container footer-row"><p>© <span data-current-year></span> Attention Learning</p><p>Seu ritmo também é progresso.</p></div>
+      <div class="container footer-row"><p>© <span data-current-year></span> Attention Learning</p><p>Seu ritmo também é progresso.</p><a href="apoio.html">Encontrar apoio</a></div>
     </footer>
     <script src="script.js"></script>
   </body>
