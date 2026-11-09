@@ -10,6 +10,7 @@ const initialState = {
   journalEntries: [],
   joinedGroups: [],
   pomodoro: { focusMinutes: 25, breakMinutes: 5 },
+  reminders: { enabled: false, intervalMinutes: 60, nextReminderAt: null },
 };
 
 const defaultGoalLabels = {
@@ -25,6 +26,12 @@ const studyGroups = [
   { id: 'redacao', name: 'Oficina de Redação', subject: 'Linguagens', members: 10, nextMeeting: 'Sexta, 17h', description: 'Pratique estrutura, repertório e revisão de textos com colegas.' },
   { id: 'programacao', name: 'Código em Foco', subject: 'Tecnologia', members: 9, nextMeeting: 'Sábado, 10h', description: 'Sessões de estudo compartilhado para lógica e desenvolvimento.' },
   { id: 'idiomas', name: 'Clube de Conversação', subject: 'Idiomas', members: 7, nextMeeting: 'Quarta, 18h', description: 'Pratique conversação e vocabulário em um ambiente acolhedor.' },
+];
+
+const moodOptions = [
+  '😊 Feliz', '🤩 Animado', '💪 Motivado', '😌 Tranquilo', '🙏 Grato', '😎 Confiante',
+  '🙂 Bem', '😐 Neutro', '😴 Cansado', '😟 Ansioso', '😣 Estressado', '😢 Triste',
+  '😤 Frustrado', '✨ Ótimo',
 ];
 
 function readState() {
@@ -53,6 +60,15 @@ function readState() {
     breakMinutes: Number.isInteger(savedPomodoro.breakMinutes) && savedPomodoro.breakMinutes >= 1 && savedPomodoro.breakMinutes <= 30
       ? savedPomodoro.breakMinutes : initialState.pomodoro.breakMinutes,
   };
+  const savedReminders = parsed.reminders || {};
+  const reminders = {
+    enabled: savedReminders.enabled === true,
+    intervalMinutes: [30, 45, 60, 90].includes(savedReminders.intervalMinutes)
+      ? savedReminders.intervalMinutes : initialState.reminders.intervalMinutes,
+    nextReminderAt: typeof savedReminders.nextReminderAt === 'string'
+      && !Number.isNaN(Date.parse(savedReminders.nextReminderAt))
+      ? savedReminders.nextReminderAt : null,
+  };
 
   return {
     ...JSON.parse(JSON.stringify(initialState)),
@@ -67,6 +83,7 @@ function readState() {
     sessions: Array.isArray(parsed.sessions) ? parsed.sessions : [],
     joinedGroups: Array.isArray(parsed.joinedGroups) ? parsed.joinedGroups : [],
     pomodoro,
+    reminders,
   };
 }
 
@@ -117,10 +134,10 @@ function renderLanding() {
     { emoji: '🤝', title: 'Conexão e apoio', text: 'Encontre grupos de estudo e fortaleça o senso de pertencimento na vida universitária.' },
   ];
   const metrics = [
-    { label: 'Foco', value: '84%' },
-    { label: 'Sono', value: '7h 40m' },
-    { label: 'Estresse', value: 'Moderado' },
-    { label: 'Telas', value: '2h 30m' },
+    { label: 'Pomodoro', value: 'No seu ritmo' },
+    { label: 'Check-in', value: 'Quando quiser' },
+    { label: 'Tendências', value: 'Seus registros' },
+    { label: 'Privacidade', value: 'Dados locais' },
   ];
   const exercises = [
     { title: 'Mapa mental', difficulty: 'Intermediário', description: 'Conecte ideias e conceitos para facilitar a memorização visual.' },
@@ -128,35 +145,35 @@ function renderLanding() {
     { title: 'Flashcards', difficulty: 'Fácil', description: 'Teste a memória ativa com perguntas rápidas e respostas curtas.' },
   ];
   const progress = [
-    { label: 'Foco semanal', value: '92%', change: '+12% vs. semana anterior' },
-    { label: 'Sinais de bem-estar', value: '87%', change: '+8% em sono e descanso' },
-    { label: 'Conclusão de metas', value: '75%', change: '3 de 4 objetivos atingidos' },
-    { label: 'Conexão com a comunidade', value: '91%', change: '+5 novos contatos' },
+    { label: 'Perceba seus hábitos', detail: 'Registre sono, humor e foco se isso fizer sentido para você.' },
+    { label: 'Defina suas metas', detail: 'Escolha pequenos passos que respeitem sua rotina.' },
+    { label: 'Faça pausas', detail: 'Ajuste os blocos de estudo ao jeito que funciona para você.' },
+    { label: 'Peça apoio', detail: 'Explore grupos de estudo e recursos confiáveis quando precisar.' },
   ];
 
   renderCards('featureGrid', features, (item) => `
     <article class="feature-card"><div class="feature-emoji">${item.emoji}</div><h3>${item.title}</h3><p>${item.text}</p></article>
   `);
   renderCards('heroMetrics', metrics, (item) => `
-    <div class="metric-item"><label>${item.label}</label><strong>${item.value}</strong></div>
+    <div class="metric-item"><span class="metric-label">${item.label}</span><strong>${item.value}</strong></div>
   `);
   renderCards('daySummary', metrics, (item) => `
-    <div class="mini-metric"><label>${item.label}</label><strong>${item.value}</strong></div>
+    <div class="mini-metric"><span class="mini-metric-label">${item.label}</span><strong>${item.value}</strong></div>
   `);
   renderCards('memoryExercises', exercises, (item) => `
     <article class="exercise-card"><div class="tag">${item.difficulty}</div><h4>${item.title}</h4><p>${item.description}</p></article>
   `);
   renderCards('studyGroups', studyGroups.slice(0, 3), (item) => `
-    <article class="group-card"><div class="tag">${item.subject}</div><h4>${item.name}</h4><p>${item.members} membros</p><p class="meta">Próxima aula: ${item.nextMeeting}</p></article>
+    <article class="group-card"><div class="tag">${item.subject}</div><h4>${item.name}</h4><p>Grupo demonstrativo</p></article>
   `);
   renderCards('progressBoard', progress, (item) => `
-    <article class="progress-card"><h4>${item.label}</h4><div class="progress-value">${item.value}</div><div class="progress-bar"><span class="progress-track" style="width:${item.value}"></span></div><p>${item.change}</p></article>
+    <article class="progress-card"><h4>${item.label}</h4><p>${item.detail}</p></article>
   `);
 
   const name = document.getElementById('studentName');
   const campus = document.getElementById('studentCampus');
-  if (name) name.textContent = state.profile?.name || 'Ana Luíza';
-  if (campus) campus.textContent = state.profile?.campus || 'Campus Central';
+  if (name) name.textContent = state.profile?.name || 'Aprendizagem';
+  if (campus) campus.textContent = state.profile?.campus || 'Um passo de cada vez';
 }
 
 function renderCards(id, items, renderItem) {
@@ -281,6 +298,7 @@ function setupDashboard() {
   setupJournal();
   setupPrivacyControls();
   setupWeeklyTrends();
+  setupReminders();
   setupTimer();
   refreshDashboardStats();
 }
@@ -295,6 +313,7 @@ function setupPrivacyControls() {
     try {
       const exportData = {
         app: 'Attention Learning',
+        version: 1,
         exportedAt: new Date().toISOString(),
         note: 'Exportação de dados armazenados localmente pelo protótipo.',
         data: state,
@@ -315,6 +334,42 @@ function setupPrivacyControls() {
     }
   });
 
+  const importButton = document.getElementById('importData');
+  const importFile = document.getElementById('importDataFile');
+  importButton.addEventListener('click', () => importFile.click());
+  importFile.addEventListener('change', async () => {
+    const file = importFile.files?.[0];
+    importFile.value = '';
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      message.textContent = 'O arquivo excede o limite de 5 MB.';
+      return;
+    }
+
+    let restoredState;
+    try {
+      const backup = JSON.parse(await file.text());
+      restoredState = validateBackup(backup);
+    } catch (error) {
+      console.error('O arquivo de backup não pôde ser validado.', error);
+      message.textContent = error instanceof SyntaxError
+        ? 'Este arquivo não contém um JSON válido.'
+        : error.message || 'Não foi possível ler este arquivo de backup.';
+      return;
+    }
+
+    const confirmed = window.confirm('Restaurar este arquivo substituirá todos os dados atuais do Attention Learning neste navegador. Deseja continuar?');
+    if (!confirmed) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(restoredState));
+      state = restoredState;
+      window.location.reload();
+    } catch (error) {
+      console.error('Não foi possível restaurar o backup.', error);
+      message.textContent = 'Não foi possível restaurar o backup. Verifique o espaço disponível e as permissões de armazenamento.';
+    }
+  });
+
   deleteButton.addEventListener('click', () => {
     const confirmed = window.confirm('Apagar definitivamente todos os dados do Attention Learning salvos neste navegador? Esta ação não pode ser desfeita.');
     if (!confirmed) return;
@@ -327,6 +382,109 @@ function setupPrivacyControls() {
       message.textContent = 'Não foi possível apagar os dados. Tente novamente ou remova os dados do site nas configurações do navegador.';
     }
   });
+}
+
+function validateBackup(backup) {
+  const invalid = () => new Error('O arquivo não é um backup válido do Attention Learning ou contém dados incompatíveis.');
+  const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+  const validDate = (value) => typeof value === 'string'
+    && /^\d{4}-\d{2}-\d{2}$/.test(value)
+    && !Number.isNaN(Date.parse(`${value}T00:00:00Z`))
+    && new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value;
+
+  if (!isObject(backup) || backup.app !== 'Attention Learning'
+    || ![undefined, 1].includes(backup.version) || !isObject(backup.data)) {
+    throw invalid();
+  }
+  const data = backup.data;
+  const requiredKeys = ['profile', 'goals', 'goalsDate', 'dailyLogs', 'sessions', 'customGoals', 'journalEntries', 'joinedGroups'];
+  if (!requiredKeys.every((key) => Object.prototype.hasOwnProperty.call(data, key))) throw invalid();
+  const result = JSON.parse(JSON.stringify(initialState));
+
+  if (data.profile !== null && data.profile !== undefined) {
+    if (!isObject(data.profile)
+      || !['name', 'email', 'campus', 'course'].every((field) => typeof data.profile[field] === 'string')
+      || data.profile.name.length > 70 || data.profile.email.length > 120
+      || data.profile.campus.length > 100 || data.profile.course.length > 100) throw invalid();
+    result.profile = {
+      name: data.profile.name,
+      email: data.profile.email,
+      campus: data.profile.campus,
+      course: data.profile.course,
+    };
+  }
+
+  if (data.goals !== undefined) {
+    if (!isObject(data.goals) || !Object.keys(result.goals).every((key) => typeof data.goals[key] === 'boolean')) throw invalid();
+    result.goals = { ...result.goals, ...data.goals };
+  }
+  if (data.goalsDate !== undefined) {
+    if (!validDate(data.goalsDate)) throw invalid();
+    result.goalsDate = data.goalsDate;
+  }
+
+  if (data.customGoals !== undefined) {
+    if (!Array.isArray(data.customGoals) || data.customGoals.length > 500
+      || data.customGoals.some((goal) => !isObject(goal) || typeof goal.id !== 'string'
+        || !goal.id || goal.id.length > 100 || typeof goal.title !== 'string'
+        || !goal.title.trim() || goal.title.length > 100 || typeof goal.completed !== 'boolean')) throw invalid();
+    result.customGoals = data.customGoals.map(({ id, title, completed }) => ({ id, title, completed }));
+  }
+
+  if (data.sessions !== undefined) {
+    if (!Array.isArray(data.sessions) || data.sessions.length > 10000
+      || data.sessions.some((session) => !isObject(session) || !validDate(session.date)
+        || !Number.isInteger(session.minutes) || session.minutes < 1 || session.minutes > 1440)) throw invalid();
+    result.sessions = data.sessions.map(({ date, minutes }) => ({ date, minutes }));
+  }
+
+  if (data.dailyLogs !== undefined) {
+    if (!isObject(data.dailyLogs) || Object.entries(data.dailyLogs).length > 10000) throw invalid();
+    for (const [date, log] of Object.entries(data.dailyLogs)) {
+      if (!validDate(date) || !isObject(log)
+        || typeof log.sleepHours !== 'number' || log.sleepHours < 0 || log.sleepHours > 24
+        || !moodOptions.includes(log.mood)
+        || !Number.isInteger(log.focusScore) || log.focusScore < 1 || log.focusScore > 5) throw invalid();
+      result.dailyLogs[date] = { sleepHours: log.sleepHours, mood: log.mood, focusScore: log.focusScore };
+    }
+  }
+
+  if (data.journalEntries !== undefined) {
+    if (!Array.isArray(data.journalEntries) || data.journalEntries.length > 5000
+      || data.journalEntries.some((entry) => !isObject(entry) || typeof entry.id !== 'string'
+        || !entry.id || entry.id.length > 100 || typeof entry.text !== 'string'
+        || !entry.text.trim() || entry.text.length > 3000 || typeof entry.createdAt !== 'string'
+        || Number.isNaN(Date.parse(entry.createdAt)))) throw invalid();
+    result.journalEntries = data.journalEntries.map(({ id, text, createdAt }) => ({ id, text, createdAt }));
+  }
+
+  if (data.joinedGroups !== undefined) {
+    const knownGroupIds = studyGroups.map((group) => group.id);
+    if (!Array.isArray(data.joinedGroups) || data.joinedGroups.length > knownGroupIds.length
+      || data.joinedGroups.some((id) => !knownGroupIds.includes(id))) throw invalid();
+    result.joinedGroups = [...new Set(data.joinedGroups)];
+  }
+
+  if (data.pomodoro !== undefined) {
+    if (!isObject(data.pomodoro)
+      || !Number.isInteger(data.pomodoro.focusMinutes) || data.pomodoro.focusMinutes < 5 || data.pomodoro.focusMinutes > 90
+      || !Number.isInteger(data.pomodoro.breakMinutes) || data.pomodoro.breakMinutes < 1 || data.pomodoro.breakMinutes > 30) throw invalid();
+    result.pomodoro = { ...data.pomodoro };
+  }
+
+  if (data.reminders !== undefined) {
+    if (!isObject(data.reminders) || typeof data.reminders.enabled !== 'boolean'
+      || ![30, 45, 60, 90].includes(data.reminders.intervalMinutes)
+      || (data.reminders.nextReminderAt !== null
+        && (typeof data.reminders.nextReminderAt !== 'string' || Number.isNaN(Date.parse(data.reminders.nextReminderAt))))) throw invalid();
+    result.reminders = {
+      enabled: data.reminders.enabled,
+      intervalMinutes: data.reminders.intervalMinutes,
+      nextReminderAt: data.reminders.nextReminderAt,
+    };
+  }
+
+  return result;
 }
 
 function setupWeeklyTrends() {
@@ -384,6 +542,89 @@ function setupWeeklyTrends() {
   document.getElementById('trendEmpty').hidden = recordedDays > 0;
 }
 
+function setupReminders() {
+  const form = document.getElementById('remindersForm');
+  if (!form) return;
+
+  const enabledInput = document.getElementById('remindersEnabled');
+  const intervalInput = document.getElementById('reminderInterval');
+  const status = document.getElementById('reminderStatus');
+  enabledInput.checked = state.reminders.enabled;
+  intervalInput.value = String(state.reminders.intervalMinutes);
+
+  if (state.reminders.enabled
+    && (!state.reminders.nextReminderAt || Date.parse(state.reminders.nextReminderAt) <= Date.now())) {
+    state.reminders.nextReminderAt = new Date(Date.now() + state.reminders.intervalMinutes * 60000).toISOString();
+    saveState();
+  }
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    let permission = 'unsupported';
+    if (enabledInput.checked && 'Notification' in window) {
+      permission = Notification.permission;
+      if (permission === 'default') {
+        try {
+          permission = await Notification.requestPermission();
+        } catch (error) {
+          console.error('Não foi possível solicitar permissão para notificações.', error);
+          permission = 'denied';
+        }
+      }
+    }
+
+    const previousReminders = state.reminders;
+    const intervalMinutes = Number(intervalInput.value);
+    state.reminders = {
+      enabled: enabledInput.checked,
+      intervalMinutes,
+      nextReminderAt: enabledInput.checked
+        ? new Date(Date.now() + intervalMinutes * 60000).toISOString()
+        : null,
+    };
+    if (!saveState()) {
+      state.reminders = previousReminders;
+      enabledInput.checked = previousReminders.enabled;
+      intervalInput.value = String(previousReminders.intervalMinutes);
+      return;
+    }
+
+    if (!state.reminders.enabled) {
+      status.textContent = 'Lembretes desativados.';
+    } else if (permission === 'granted') {
+      status.textContent = `Lembretes ativados a cada ${intervalMinutes} minutos. As notificações aparecem quando esta página estiver em segundo plano.`;
+    } else {
+      status.textContent = `Lembretes ativados a cada ${intervalMinutes} minutos enquanto o dashboard estiver aberto. Notificações do navegador não estão disponíveis ou foram negadas.`;
+    }
+  });
+
+  window.setInterval(() => {
+    const nextReminder = Date.parse(state.reminders.nextReminderAt || '');
+    if (!state.reminders.enabled || !nextReminder || nextReminder > Date.now()) return;
+
+    const previousNextReminder = state.reminders.nextReminderAt;
+    state.reminders.nextReminderAt = new Date(Date.now() + state.reminders.intervalMinutes * 60000).toISOString();
+    if (!saveState()) {
+      state.reminders.nextReminderAt = previousNextReminder;
+      status.textContent = 'Não foi possível salvar o próximo lembrete. Verifique o armazenamento do navegador.';
+      return;
+    }
+
+    if ('Notification' in window && Notification.permission === 'granted' && document.hidden) {
+      try {
+        new Notification('Hora de fazer uma pausa', {
+          body: 'Se puder, alongue-se, respire um pouco ou descanse os olhos.',
+          icon: new URL('app-icon.svg', document.baseURI).href,
+        });
+        return;
+      } catch (error) {
+        console.error('Não foi possível mostrar uma notificação de pausa.', error);
+      }
+    }
+    status.textContent = 'Lembrete: se puder, faça uma pausa curta e volte no seu ritmo.';
+  }, 15000);
+}
+
 function setupJournal() {
   const form = document.getElementById('journalForm');
   if (!form) return;
@@ -428,8 +669,15 @@ function setupJournal() {
   entriesContainer.addEventListener('click', (event) => {
     const button = event.target.closest('[data-delete-entry]');
     if (!button) return;
-    state.journalEntries = state.journalEntries.filter((entry) => entry.id !== button.dataset.deleteEntry);
-    if (saveState()) renderJournalEntries();
+    if (!window.confirm('Apagar este registro do diário? Esta ação não pode ser desfeita.')) return;
+    const previousEntries = state.journalEntries;
+    state.journalEntries = previousEntries.filter((entry) => entry.id !== button.dataset.deleteEntry);
+    if (saveState()) {
+      renderJournalEntries();
+      message.textContent = 'Registro apagado.';
+    } else {
+      state.journalEntries = previousEntries;
+    }
   });
 }
 
@@ -455,7 +703,7 @@ function renderJournalEntries() {
     deleteButton.type = 'button';
     deleteButton.className = 'remove-goal-button';
     deleteButton.dataset.deleteEntry = entry.id;
-    deleteButton.setAttribute('aria-label', 'Apagar este registro do diário');
+    deleteButton.setAttribute('aria-label', `Apagar registro de ${date.textContent}`);
     deleteButton.textContent = 'Apagar';
     const text = document.createElement('p');
     text.textContent = entry.text;
@@ -683,6 +931,56 @@ function setupCommunity() {
   render();
 }
 
+let deferredInstallPrompt = null;
+
+function setupPwa() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js').catch((error) => {
+      console.error('Não foi possível ativar o modo offline.', error);
+    });
+  }
+
+  const installButton = document.getElementById('installAppButton');
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    if (installButton) installButton.hidden = false;
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    if (installButton) installButton.hidden = true;
+  });
+
+  if (installButton) {
+    installButton.addEventListener('click', async () => {
+      if (!deferredInstallPrompt) return;
+      try {
+        deferredInstallPrompt.prompt();
+        await deferredInstallPrompt.userChoice;
+      } catch (error) {
+        console.error('Não foi possível iniciar a instalação do aplicativo.', error);
+        const installHelp = document.getElementById('installHelp');
+        if (installHelp) installHelp.textContent = 'A instalação não foi concluída. Use “Instalar app” ou “Adicionar à tela inicial” no menu do navegador.';
+      } finally {
+        deferredInstallPrompt = null;
+        installButton.hidden = true;
+      }
+    });
+  }
+
+  const networkNotice = document.createElement('p');
+  networkNotice.className = 'network-notice';
+  networkNotice.setAttribute('role', 'status');
+  networkNotice.setAttribute('aria-live', 'polite');
+  networkNotice.hidden = navigator.onLine;
+  networkNotice.textContent = 'Você está sem conexão. As páginas já visitadas podem continuar disponíveis neste dispositivo.';
+  const header = document.querySelector('.site-header');
+  if (header) header.after(networkNotice);
+  window.addEventListener('offline', () => { networkNotice.hidden = false; });
+  window.addEventListener('online', () => { networkNotice.hidden = true; });
+}
+
 function initializePage() {
   document.querySelectorAll('[data-current-year]').forEach((el) => { el.textContent = new Date().getFullYear(); });
   if (document.getElementById('currentYear')) document.getElementById('currentYear').textContent = new Date().getFullYear();
@@ -690,6 +988,7 @@ function initializePage() {
   setupSignup();
   setupDashboard();
   setupCommunity();
+  setupPwa();
 }
 
 if (document.readyState === 'loading') {
