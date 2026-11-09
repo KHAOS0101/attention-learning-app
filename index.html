@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Attention Learning</title>
+    <meta
+      name="description"
+      content="Attention Learning é um aplicativo de psicologia aplicada à aprendizagem e ao bem-estar estudantil, com ferramentas de autoconhecimento e hábitos de estudo."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <div class="brand">
+          <div class="brand-mark">A</div>
+          <span>Attention Learning</span>
+        </div>
+        <nav class="main-nav" aria-label="Navegação principal">
+          <a href="#overview">Visão geral</a>
+          <a href="#features">Recursos</a>
+          <a href="dashboard.html">Dashboard</a>
+          <a href="comunidade.html">Comunidade</a>
+        </nav>
+        <a class="btn btn-primary" href="cadastro.html">Criar conta</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container hero-grid">
+          <div class="hero-copy">
+            <p class="eyebrow">Psicologia aplicada à vida estudantil</p>
+            <h1>Entenda seu jeito de aprender e <span class="headline-highlight">cuide do seu bem-estar.</span></h1>
+            <p class="lead">
+              Um aplicativo com foco em psicologia que ajuda você a observar atenção, emoções e hábitos
+              de estudo, construir uma rotina mais saudável e aprender no seu próprio ritmo.
+            </p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="cadastro.html">Começar agora</a>
+              <a class="btn btn-secondary" href="dashboard.html">Ver dashboard</a>
+            </div>
+            <ul class="hero-pills" aria-label="Principais indicadores">
+              <li>+84% foco</li>
+              <li>7h40min sono</li>
+              <li>4 grupos ativos</li>
+            </ul>
+          </div>
+
+          <div class="hero-card" aria-label="Resumo do aluno">
+            <div class="card-topline">
+              <span class="status-dot"></span>
+              <span>Hoje</span>
+            </div>
+            <div class="student-profile">
+              <div class="avatar">AL</div>
+              <div>
+                <h2 id="studentName">Ana Luíza</h2>
+                <p id="studentCampus">Campus Central</p>
+              </div>
+            </div>
+
+            <div class="metric-list" id="heroMetrics"></div>
+
+            <div class="resolution-box">
+              <span>Meta do dia</span>
+              <strong>3 sessões de foco + 1 revisão</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="overview" class="stats-band">
+        <div class="container stats-grid">
+          <article>
+            <strong>25 min</strong>
+            <span>Pomodoro</span>
+          </article>
+          <article>
+            <strong>84%</strong>
+            <span>Foco médio</span>
+          </article>
+          <article>
+            <strong>7.4h</strong>
+            <span>Sono</span>
+          </article>
+          <article>
+            <strong>12</strong>
+            <span>Metas concluídas</span>
+          </article>
+        </div>
+      </section>
+
+      <section id="features" class="section">
+        <div class="container">
+          <div class="section-heading">
+            <p class="eyebrow">Psicologia no cotidiano</p>
+            <h2>Autoconhecimento e hábitos saudáveis também fazem parte da aprendizagem.</h2>
+          </div>
+          <div class="feature-grid" id="featureGrid"></div>
+        </div>
+      </section>
+
+      <section class="section psychology-note">
+        <div class="container psychology-note-inner">
+          <div class="psychology-symbol" aria-hidden="true">Ψ</div>
+          <div>
+            <p class="eyebrow">Cuidado e autoconhecimento</p>
+            <h2>Um apoio para refletir, não para se diagnosticar.</h2>
+            <p>O Attention Learning é uma ferramenta educativa de psicologia aplicada à rotina de estudos e ao bem-estar. Ele não substitui acompanhamento psicológico, avaliação profissional ou atendimento de saúde.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="dashboard" class="section alt-bg">
+        <div class="container dashboard-grid">
+          <div class="panel overview-panel">
+            <div class="panel-header">
+              <h3>Resumo do dia</h3>
+              <span>Hoje</span>
+            </div>
+            <div class="ring-wrap">
+              <div class="ring-chart">
+                <div>
+                  <strong>84%</strong>
+                  <span>Concentração</span>
+                </div>
+              </div>
+            </div>
+            <div class="mini-metrics" id="daySummary"></div>
+          </div>
+
+          <div class="panel timer-panel">
+            <div class="panel-header">
+              <h3>Pomodoro</h3>
+              <span>Em andamento</span>
+            </div>
+            <div class="timer-display" id="pomodoroTimer">25:00</div>
+            <div class="timer-actions">
+              <a class="btn btn-primary" href="dashboard.html">Abrir Pomodoro</a>
+            </div>
+            <ul class="timer-list">
+              <li>Organize blocos de foco no seu próprio ritmo</li>
+              <li>Registre suas metas e acompanhe a evolução</li>
+              <li>Seus dados ficam salvos neste navegador</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container split-layout">
+          <div class="panel memory-panel">
+            <div class="panel-header">
+              <h3>Estratégias de memória</h3>
+              <span>Melhorar retenção</span>
+            </div>
+            <div id="memoryExercises" class="exercise-list"></div>
+          </div>
+
+          <div class="panel community-panel" id="community">
+            <div class="panel-header">
+              <h3>Conexão estudantil</h3>
+              <a href="comunidade.html">Ver todos os grupos</a>
+            </div>
+            <div id="studyGroups" class="group-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section progress-section">
+        <div class="container">
+          <div class="section-heading">
+            <p class="eyebrow">Progresso</p>
+            <h2>Painel de evolução</h2>
+          </div>
+          <div id="progressBoard" class="progress-board"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-row">
+        <p>© <span id="currentYear"></span> Attention Learning</p>
+        <p>Psicologia, aprendizagem e bem-estar estudantil.</p>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Crie seu perfil no Attention Learning, um aplicativo de psicologia aplicada ao estudo e ao bem-estar." />
+    <title>Criar perfil · Attention Learning</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="index.html"><span class="brand-mark">A</span><span>Attention Learning</span></a>
+        <nav class="main-nav" aria-label="Navegação principal">
+          <a href="index.html">Início</a>
+          <a href="dashboard.html">Dashboard</a>
+          <a href="comunidade.html">Comunidade</a>
+        </nav>
+        <a class="btn btn-secondary" href="dashboard.html">Abrir dashboard</a>
+      </div>
+    </header>
+    <main class="section">
+      <div class="container signup-layout">
+        <section class="signup-intro">
+          <p class="eyebrow">Psicologia aplicada à aprendizagem</p>
+          <h1>Comece uma rotina de estudos que respeita você.</h1>
+          <p class="lead">Use ferramentas de autoconhecimento para acompanhar seus hábitos, emoções e bem-estar durante os estudos.</p>
+          <div class="signup-note">
+            <strong>Protótipo local</strong>
+            <p>Seu perfil e seus registros são salvos somente neste navegador. Este protótipo não cria uma conta online nem sincroniza dados.</p>
+          </div>
+        </section>
+        <form class="panel form-panel" id="signupForm">
+          <h2>Criar perfil</h2>
+          <label for="name">Nome</label>
+          <input id="name" name="name" autocomplete="name" maxlength="70" required />
+          <label for="email">E-mail</label>
+          <input id="email" name="email" type="email" autocomplete="email" maxlength="120" required />
+          <label for="campus">Campus ou instituição</label>
+          <input id="campus" name="campus" autocomplete="organization" maxlength="100" required />
+          <label for="course">Curso</label>
+          <input id="course" name="course" maxlength="100" placeholder="Ex.: Psicologia" />
+          <button class="btn btn-primary" type="submit">Salvar perfil</button>
+          <p class="form-message" id="signupMessage" role="status" aria-live="polite"></p>
+          <p class="form-message" id="storageError" role="alert" hidden></p>
+          <p class="form-footnote">Ao salvar, você concorda em manter estas informações apenas neste dispositivo.</p>
+        </form>
+      </div>
+    </main>
+    <footer class="site-footer">
+      <div class="container footer-row">
+        <p>© <span data-current-year></span> Attention Learning</p>
+        <a href="index.html">Voltar ao início</a>
+      </div>
+    </footer>
+    <script src="script.js"></script>
+  </body>
+</html>
