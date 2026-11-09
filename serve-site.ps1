@@ -51,6 +51,8 @@ while ($listener.IsListening) {
       '.css' { $response.ContentType = 'text/css; charset=utf-8' }
       '.js' { $response.ContentType = 'text/javascript; charset=utf-8' }
       '.svg' { $response.ContentType = 'image/svg+xml' }
+      '.webmanifest' { $response.ContentType = 'application/manifest+json; charset=utf-8' }
+      '.png' { $response.ContentType = 'image/png' }
       default { $response.ContentType = 'application/octet-stream' }
     }
 
