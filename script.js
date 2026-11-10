@@ -11,6 +11,9 @@ const initialState = {
   joinedGroups: [],
   pomodoro: { focusMinutes: 25, breakMinutes: 5 },
   reminders: { enabled: false, intervalMinutes: 60, nextReminderAt: null },
+  studyTasks: [],
+  goalHistory: {},
+  preferences: { theme: 'system', textSize: 'normal', onboardingComplete: false },
 };
 
 const defaultGoalLabels = {
@@ -49,7 +52,20 @@ function readState() {
       .map((goal) => ({ id: goal.id, title: goal.title, completed: Boolean(goal.completed) }))
     : [];
   const goalsDate = parsed.goalsDate || todayKey();
+  const goalHistory = parsed.goalHistory && typeof parsed.goalHistory === 'object' && !Array.isArray(parsed.goalHistory)
+    ? Object.fromEntries(Object.entries(parsed.goalHistory).slice(0, 10000).filter(([date, summary]) => (
+      isValidDateKey(date) && summary && Number.isInteger(summary.completed) && summary.completed >= 0
+      && Number.isInteger(summary.total) && summary.total >= summary.completed && summary.total <= 503
+    )))
+    : {};
   if (goalsDate !== todayKey()) {
+    if (isValidDateKey(goalsDate)) {
+      const total = Object.keys(savedGoals).length + customGoals.length;
+      goalHistory[goalsDate] = {
+        completed: Object.values(savedGoals).filter(Boolean).length + customGoals.filter((goal) => goal.completed).length,
+        total,
+      };
+    }
     Object.keys(savedGoals).forEach((id) => { savedGoals[id] = false; });
     customGoals.forEach((goal) => { goal.completed = false; });
   }
@@ -69,6 +85,29 @@ function readState() {
       && !Number.isNaN(Date.parse(savedReminders.nextReminderAt))
       ? savedReminders.nextReminderAt : null,
   };
+  const studyTasks = Array.isArray(parsed.studyTasks)
+    ? parsed.studyTasks.filter((task) => task && typeof task.id === 'string'
+      && task.id.length <= 100 && typeof task.title === 'string'
+      && task.title.trim().length > 0 && task.title.length <= 120
+      && isValidDateKey(task.date) && (task.time === '' || task.time === null
+        || (typeof task.time === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(task.time)))
+      && Number.isInteger(task.minutes) && task.minutes >= 5 && task.minutes <= 360)
+      .map((task) => ({
+        id: task.id,
+        title: task.title,
+        date: task.date,
+        time: task.time || '',
+        minutes: task.minutes,
+        completed: Boolean(task.completed),
+      }))
+      .slice(0, 500)
+    : [];
+  const savedPreferences = parsed.preferences || {};
+  const preferences = {
+    theme: ['system', 'light', 'dark', 'contrast'].includes(savedPreferences.theme) ? savedPreferences.theme : 'system',
+    textSize: ['normal', 'large', 'larger'].includes(savedPreferences.textSize) ? savedPreferences.textSize : 'normal',
+    onboardingComplete: savedPreferences.onboardingComplete === true,
+  };
 
   return {
     ...JSON.parse(JSON.stringify(initialState)),
@@ -84,6 +123,9 @@ function readState() {
     joinedGroups: Array.isArray(parsed.joinedGroups) ? parsed.joinedGroups : [],
     pomodoro,
     reminders,
+    studyTasks,
+    goalHistory,
+    preferences,
   };
 }
 
@@ -120,6 +162,13 @@ function todayKey() {
   const now = new Date();
   const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
   return localDate.toISOString().slice(0, 10);
+}
+
+function isValidDateKey(value) {
+  return typeof value === 'string'
+    && /^\d{4}-\d{2}-\d{2}$/.test(value)
+    && !Number.isNaN(Date.parse(`${value}T00:00:00Z`))
+    && new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value;
 }
 
 function todaySessions() {
@@ -231,8 +280,9 @@ function setupDashboard() {
     input.checked = Boolean(state.goals[input.dataset.goal]);
     input.addEventListener('change', () => {
       state.goals[input.dataset.goal] = input.checked;
-      saveState();
+      saveTodayGoalProgress();
       refreshDashboardStats();
+      setupWeeklyTrends();
     });
   });
   renderCustomGoals();
@@ -252,11 +302,12 @@ function setupDashboard() {
       title,
       completed: false,
     });
-    if (!saveState()) return;
+    if (!saveTodayGoalProgress()) return;
     input.value = '';
     message.textContent = 'Meta adicionada à sua lista de hoje.';
     renderCustomGoals();
     refreshDashboardStats();
+    setupWeeklyTrends();
     input.focus();
   });
   document.getElementById('customGoalList').addEventListener('change', (event) => {
@@ -265,16 +316,18 @@ function setupDashboard() {
     const goal = state.customGoals.find((item) => item.id === input.dataset.customGoal);
     if (!goal) return;
     goal.completed = input.checked;
-    saveState();
+    saveTodayGoalProgress();
     refreshDashboardStats();
+    setupWeeklyTrends();
   });
   document.getElementById('customGoalList').addEventListener('click', (event) => {
     const button = event.target.closest('[data-remove-goal]');
     if (!button) return;
     state.customGoals = state.customGoals.filter((goal) => goal.id !== button.dataset.removeGoal);
-    if (!saveState()) return;
+    if (!saveTodayGoalProgress()) return;
     renderCustomGoals();
     refreshDashboardStats();
+    setupWeeklyTrends();
   });
 
   document.getElementById('focusScore').addEventListener('input', (event) => {
@@ -298,9 +351,280 @@ function setupDashboard() {
   setupJournal();
   setupPrivacyControls();
   setupWeeklyTrends();
+  setupStudyPlanner();
+  setupPreferences();
+  setupOnboarding();
+  setupResourceSearch();
   setupReminders();
   setupTimer();
+  if (!state.goalHistory[todayKey()]) saveTodayGoalProgress();
+  setupWeeklyTrends();
   refreshDashboardStats();
+}
+
+function saveTodayGoalProgress() {
+  const date = todayKey();
+  const total = Object.keys(state.goals).length + state.customGoals.length;
+  state.goalHistory[date] = {
+    completed: Object.values(state.goals).filter(Boolean).length
+      + state.customGoals.filter((goal) => goal.completed).length,
+    total,
+  };
+  state.goalsDate = date;
+  return saveState();
+}
+
+function setupStudyPlanner() {
+  const form = document.getElementById('plannerTaskForm');
+  if (!form) return;
+
+  const weekContainer = document.getElementById('plannerWeek');
+  const taskContainer = document.getElementById('plannerTasks');
+  const dateInput = document.getElementById('plannerTaskDate');
+  let selectedDate = todayKey();
+  let weekStart = startOfWeek(new Date());
+
+  function renderPlanner() {
+    weekContainer.replaceChildren();
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    const formatWeekDate = new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'long' });
+    document.getElementById('plannerWeekLabel').textContent = `${formatWeekDate.format(weekStart)} – ${formatWeekDate.format(weekEnd)}`;
+
+    for (let offset = 0; offset < 7; offset += 1) {
+      const date = new Date(weekStart);
+      date.setDate(date.getDate() + offset);
+      const key = dateKey(date);
+      const tasksForDate = state.studyTasks.filter((task) => task.date === key);
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'planner-day-button';
+      button.classList.toggle('is-selected', key === selectedDate);
+      button.setAttribute('aria-pressed', String(key === selectedDate));
+      button.dataset.plannerDate = key;
+      const weekday = document.createElement('span');
+      weekday.textContent = new Intl.DateTimeFormat('pt-BR', { weekday: 'short' }).format(date);
+      const dayNumber = document.createElement('strong');
+      dayNumber.textContent = String(date.getDate());
+      const count = document.createElement('span');
+      count.textContent = `${tasksForDate.filter((task) => task.completed).length}/${tasksForDate.length} tarefas`;
+      button.append(weekday, dayNumber, count);
+      weekContainer.append(button);
+    }
+
+    const selected = new Date(`${selectedDate}T12:00:00`);
+    document.getElementById('plannerDayTitle').textContent = new Intl.DateTimeFormat('pt-BR', {
+      weekday: 'long', day: 'numeric', month: 'long',
+    }).format(selected);
+    dateInput.value = selectedDate;
+    taskContainer.replaceChildren();
+    const tasks = state.studyTasks.filter((task) => task.date === selectedDate)
+      .sort((first, second) => (first.time || '99:99').localeCompare(second.time || '99:99'));
+    document.getElementById('plannerEmpty').hidden = tasks.length > 0;
+    tasks.forEach((task) => {
+      const item = document.createElement('article');
+      item.className = 'planner-task';
+      const label = document.createElement('label');
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = task.completed;
+      checkbox.dataset.plannerTask = task.id;
+      checkbox.setAttribute('aria-label', `Marcar como concluída: ${task.title}`);
+      const title = document.createElement('strong');
+      title.textContent = task.title;
+      title.classList.toggle('is-complete', task.completed);
+      label.append(checkbox, title);
+      const detail = document.createElement('span');
+      detail.textContent = `${task.time ? `${task.time} · ` : ''}${task.minutes} min`;
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'remove-goal-button';
+      remove.dataset.removePlannerTask = task.id;
+      remove.setAttribute('aria-label', `Apagar tarefa: ${task.title}`);
+      remove.textContent = 'Apagar';
+      item.append(label, detail, remove);
+      taskContainer.append(item);
+    });
+  }
+
+  weekContainer.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-planner-date]');
+    if (!button) return;
+    selectedDate = button.dataset.plannerDate;
+    renderPlanner();
+  });
+  document.getElementById('plannerPreviousWeek').addEventListener('click', () => {
+    weekStart.setDate(weekStart.getDate() - 7);
+    selectedDate = dateKey(weekStart);
+    renderPlanner();
+  });
+  document.getElementById('plannerNextWeek').addEventListener('click', () => {
+    weekStart.setDate(weekStart.getDate() + 7);
+    selectedDate = dateKey(weekStart);
+    renderPlanner();
+  });
+  document.getElementById('plannerCurrentWeek').addEventListener('click', () => {
+    weekStart = startOfWeek(new Date());
+    selectedDate = todayKey();
+    renderPlanner();
+  });
+  dateInput.value = selectedDate;
+  dateInput.addEventListener('change', () => {
+    if (!isValidDateKey(dateInput.value)) return;
+    selectedDate = dateInput.value;
+    weekStart = startOfWeek(new Date(`${selectedDate}T12:00:00`));
+    renderPlanner();
+  });
+  taskContainer.addEventListener('change', (event) => {
+    const checkbox = event.target.closest('[data-planner-task]');
+    if (!checkbox) return;
+    const task = state.studyTasks.find((item) => item.id === checkbox.dataset.plannerTask);
+    if (!task) return;
+    task.completed = checkbox.checked;
+    if (!saveState()) return;
+    renderPlanner();
+    setupWeeklyTrends();
+  });
+  taskContainer.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-remove-planner-task]');
+    if (!button) return;
+    state.studyTasks = state.studyTasks.filter((task) => task.id !== button.dataset.removePlannerTask);
+    if (!saveState()) return;
+    renderPlanner();
+    setupWeeklyTrends();
+  });
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const formData = new FormData(form);
+    const title = String(formData.get('title') || '').trim();
+    const date = String(formData.get('date') || '');
+    const time = String(formData.get('time') || '');
+    const minutes = Number(formData.get('minutes'));
+    const message = document.getElementById('plannerMessage');
+    if (!title || title.length > 120 || !isValidDateKey(date)
+      || (time && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time))
+      || !Number.isInteger(minutes) || minutes < 5 || minutes > 360) {
+      message.textContent = 'Confira a tarefa, o dia e a duração antes de salvar.';
+      return;
+    }
+    if (state.studyTasks.length >= 500) {
+      message.textContent = 'Você atingiu o limite de 500 tarefas salvas. Apague algumas para adicionar outras.';
+      return;
+    }
+    state.studyTasks.push({
+      id: `task-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      title,
+      date,
+      time,
+      minutes,
+      completed: false,
+    });
+    if (!saveState()) return;
+    selectedDate = date;
+    weekStart = startOfWeek(new Date(`${date}T12:00:00`));
+    form.reset();
+    document.getElementById('plannerTaskMinutes').value = '25';
+    message.textContent = 'Passo adicionado ao seu planejamento.';
+    renderPlanner();
+    setupWeeklyTrends();
+    document.getElementById('plannerTaskTitle').focus();
+  });
+  renderPlanner();
+}
+
+function dateKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function startOfWeek(date) {
+  const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+  return monday;
+}
+
+function setupPreferences() {
+  const form = document.getElementById('preferencesForm');
+  if (!form) return;
+  const theme = document.getElementById('themePreference');
+  const textSize = document.getElementById('textSizePreference');
+  theme.value = state.preferences.theme;
+  textSize.value = state.preferences.textSize;
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    state.preferences.theme = ['system', 'light', 'dark', 'contrast'].includes(theme.value) ? theme.value : 'system';
+    state.preferences.textSize = ['normal', 'large', 'larger'].includes(textSize.value) ? textSize.value : 'normal';
+    if (!saveState()) return;
+    applyPreferences();
+    document.getElementById('preferencesMessage').textContent = 'Preferências salvas neste dispositivo.';
+  });
+}
+
+function applyPreferences() {
+  if (!state?.preferences) return;
+  const systemPrefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+  document.body.dataset.theme = state.preferences.theme === 'system'
+    ? (systemPrefersDark ? 'dark' : 'light')
+    : state.preferences.theme;
+  document.documentElement.dataset.textSize = state.preferences.textSize;
+}
+
+function setupOnboarding() {
+  const dialog = document.getElementById('welcomeDialog');
+  if (!dialog) return;
+  const finish = () => {
+    state.preferences.onboardingComplete = true;
+    saveState();
+  };
+  document.getElementById('finishWelcomeGuide').addEventListener('click', () => {
+    finish();
+    dialog.close();
+  });
+  document.getElementById('showWelcomeGuide').addEventListener('click', () => dialog.showModal());
+  dialog.addEventListener('close', finish);
+  if (!state.preferences.onboardingComplete) dialog.showModal();
+}
+
+function setupResourceSearch() {
+  const input = document.getElementById('resourceSearch');
+  const results = document.getElementById('resourceSearchResults');
+  if (!input || !results) return;
+  const resources = [
+    { title: 'Planejamento semanal e tarefas', keywords: 'agenda calendário prazo tarefa organizar', href: '#studyPlanner' },
+    { title: 'Pomodoro e foco', keywords: 'tempo sessão pausa timer concentração', href: '#focusTools' },
+    { title: 'Metas de hoje', keywords: 'meta objetivo progresso rotina', href: '#dailyGoals' },
+    { title: 'Check-in de humor, sono e foco', keywords: 'emoção bem-estar diário humor sono', href: '#checkIn' },
+    { title: 'Gráficos e tendências', keywords: 'histórico gráfico evolução progresso', href: '#progressTrends' },
+    { title: 'Escrita livre e diário', keywords: 'desabafo opinião escrever diário', href: '#personalJournal' },
+    { title: 'Lembretes de pausa', keywords: 'notificação descanso intervalo', href: '#breakReminders' },
+    { title: 'Aparência e acessibilidade', keywords: 'tema escuro contraste texto leitura acessibilidade', href: '#personalization' },
+    { title: 'Privacidade e backups', keywords: 'dados exportar importar apagar privacidade', href: '#privacyControls' },
+    { title: 'Grupos de estudo', keywords: 'comunidade colegas grupo', href: 'comunidade.html' },
+    { title: 'Apoio emocional', keywords: 'psicologia ajuda cvv emergência sus', href: 'apoio.html' },
+  ];
+  const normalize = (value) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR');
+  input.addEventListener('input', () => {
+    results.replaceChildren();
+    const query = normalize(input.value.trim());
+    if (!query) {
+      results.hidden = true;
+      return;
+    }
+    const matches = resources.filter((resource) => normalize(`${resource.title} ${resource.keywords}`).includes(query));
+    matches.forEach((resource) => {
+      const item = document.createElement('li');
+      const link = document.createElement('a');
+      link.href = resource.href;
+      link.textContent = resource.title;
+      item.append(link);
+      results.append(item);
+    });
+    if (matches.length === 0) {
+      const item = document.createElement('li');
+      item.textContent = 'Nenhum recurso encontrado. Tente outra palavra.';
+      results.append(item);
+    }
+    results.hidden = false;
+  });
 }
 
 function setupPrivacyControls() {
@@ -313,7 +637,7 @@ function setupPrivacyControls() {
     try {
       const exportData = {
         app: 'Attention Learning',
-        version: 1,
+        version: 2,
         exportedAt: new Date().toISOString(),
         note: 'Exportação de dados armazenados localmente pelo protótipo.',
         data: state,
@@ -393,7 +717,7 @@ function validateBackup(backup) {
     && new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value;
 
   if (!isObject(backup) || backup.app !== 'Attention Learning'
-    || ![undefined, 1].includes(backup.version) || !isObject(backup.data)) {
+    || ![undefined, 1, 2].includes(backup.version) || !isObject(backup.data)) {
     throw invalid();
   }
   const data = backup.data;
@@ -484,6 +808,43 @@ function validateBackup(backup) {
     };
   }
 
+  if (data.studyTasks !== undefined) {
+    if (!Array.isArray(data.studyTasks) || data.studyTasks.length > 500
+      || data.studyTasks.some((task) => !isObject(task) || typeof task.id !== 'string'
+        || !task.id || task.id.length > 100 || typeof task.title !== 'string'
+        || !task.title.trim() || task.title.length > 120 || !validDate(task.date)
+        || (task.time !== '' && task.time !== null
+          && (typeof task.time !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(task.time)))
+        || !Number.isInteger(task.minutes) || task.minutes < 5 || task.minutes > 360
+        || typeof task.completed !== 'boolean')) throw invalid();
+    result.studyTasks = data.studyTasks.map((task) => ({
+      id: task.id, title: task.title, date: task.date, time: task.time || '',
+      minutes: task.minutes, completed: task.completed,
+    }));
+  }
+
+  if (data.goalHistory !== undefined) {
+    if (!isObject(data.goalHistory) || Object.entries(data.goalHistory).length > 10000) throw invalid();
+    for (const [date, summary] of Object.entries(data.goalHistory)) {
+      if (!validDate(date) || !isObject(summary)
+        || !Number.isInteger(summary.completed) || summary.completed < 0
+        || !Number.isInteger(summary.total) || summary.total < summary.completed || summary.total > 503) throw invalid();
+      result.goalHistory[date] = { completed: summary.completed, total: summary.total };
+    }
+  }
+
+  if (data.preferences !== undefined) {
+    if (!isObject(data.preferences)
+      || !['system', 'light', 'dark', 'contrast'].includes(data.preferences.theme)
+      || !['normal', 'large', 'larger'].includes(data.preferences.textSize)
+      || typeof data.preferences.onboardingComplete !== 'boolean') throw invalid();
+    result.preferences = {
+      theme: data.preferences.theme,
+      textSize: data.preferences.textSize,
+      onboardingComplete: data.preferences.onboardingComplete,
+    };
+  }
+
   return result;
 }
 
@@ -540,6 +901,92 @@ function setupWeeklyTrends() {
     body.append(row);
   }
   document.getElementById('trendEmpty').hidden = recordedDays > 0;
+  renderTrendCharts(today);
+}
+
+function renderTrendCharts(today = new Date()) {
+  const days = [];
+  for (let daysAgo = 6; daysAgo >= 0; daysAgo -= 1) {
+    const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() - daysAgo);
+    days.push({ date, key: dateKey(date) });
+  }
+
+  const sessionsPerDay = new Map();
+  state.sessions.forEach((session) => {
+    sessionsPerDay.set(session.date, (sessionsPerDay.get(session.date) || 0) + session.minutes);
+  });
+  const renderBars = (id, label, values, maximum, formatValue) => {
+    const container = document.getElementById(id);
+    if (!container) return;
+    container.replaceChildren();
+    container.setAttribute('role', 'list');
+    container.setAttribute('aria-label', label);
+    values.forEach(({ date, value }) => {
+      const item = document.createElement('div');
+      item.className = 'trend-chart-day';
+      item.setAttribute('role', 'listitem');
+      const dayName = new Intl.DateTimeFormat('pt-BR', { weekday: 'short' }).format(date);
+      const dayNumber = String(date.getDate());
+      const numericValue = value !== null && typeof value === 'object' ? value.value : value;
+      const detail = value === null ? 'Sem registro'
+        : (typeof value === 'object' ? value.display : formatValue(numericValue));
+      item.setAttribute('aria-label', `${dayName}, ${dayNumber}: ${detail}`);
+      const barTrack = document.createElement('span');
+      barTrack.className = 'trend-chart-track';
+      barTrack.setAttribute('aria-hidden', 'true');
+      const bar = document.createElement('span');
+      bar.className = 'trend-chart-bar';
+      bar.style.height = value === null ? '0%' : `${Math.max(4, Math.min(100, (numericValue / maximum) * 100))}%`;
+      barTrack.append(bar);
+      const valueLabel = document.createElement('span');
+      valueLabel.className = 'trend-chart-value';
+      valueLabel.textContent = value === null ? '—' : detail;
+      const dayLabel = document.createElement('span');
+      dayLabel.className = 'trend-chart-label';
+      dayLabel.textContent = `${dayName.replace('.', '')} ${dayNumber}`;
+      item.append(barTrack, valueLabel, dayLabel);
+      container.append(item);
+    });
+  };
+
+  renderBars('sleepChart', 'Horas de sono registradas por dia', days.map(({ date, key }) => ({
+    date, value: state.dailyLogs[key]?.sleepHours ?? null,
+  })), 12, (value) => `${value} h`);
+  renderBars('focusChart', 'Foco percebido registrado por dia, em escala de 1 a 5', days.map(({ date, key }) => ({
+    date, value: state.dailyLogs[key]?.focusScore ?? null,
+  })), 5, (value) => `${value}/5`);
+  renderBars('studyChart', 'Minutos de foco registrados pelo temporizador por dia', days.map(({ date, key }) => ({
+    date, value: sessionsPerDay.get(key) || 0,
+  })), Math.max(60, ...days.map(({ key }) => sessionsPerDay.get(key) || 0)), (value) => `${value} min`);
+  renderBars('goalChart', 'Proporção das metas concluídas em cada dia com registros', days.map(({ date, key }) => {
+    const summary = state.goalHistory[key];
+    if (!summary || summary.total === 0) return { date, value: null };
+    return {
+      date,
+      value: (summary.completed / summary.total) * 100,
+      display: `${summary.completed}/${summary.total} (${Math.round((summary.completed / summary.total) * 100)}%)`,
+    };
+  }), 100, (value) => `${Math.round(value)}%`);
+
+  const moodContainer = document.getElementById('moodChart');
+  if (!moodContainer) return;
+  moodContainer.replaceChildren();
+  moodContainer.setAttribute('role', 'list');
+  moodContainer.setAttribute('aria-label', 'Humor registrado em cada dia, sem escala de intensidade');
+  days.forEach(({ date, key }) => {
+    const item = document.createElement('div');
+    item.className = 'mood-chart-day';
+    item.setAttribute('role', 'listitem');
+    const mood = state.dailyLogs[key]?.mood || 'Sem registro';
+    item.setAttribute('aria-label', `${new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric' }).format(date)}: ${mood}`);
+    const moodLabel = document.createElement('span');
+    moodLabel.textContent = state.dailyLogs[key]?.mood || '—';
+    const dayLabel = document.createElement('span');
+    dayLabel.className = 'trend-chart-label';
+    dayLabel.textContent = new Intl.DateTimeFormat('pt-BR', { weekday: 'short', day: 'numeric' }).format(date);
+    item.append(moodLabel, dayLabel);
+    moodContainer.append(item);
+  });
 }
 
 function setupReminders() {
@@ -984,6 +1431,15 @@ function setupPwa() {
 function initializePage() {
   document.querySelectorAll('[data-current-year]').forEach((el) => { el.textContent = new Date().getFullYear(); });
   if (document.getElementById('currentYear')) document.getElementById('currentYear').textContent = new Date().getFullYear();
+  applyPreferences();
+  const colorScheme = window.matchMedia?.('(prefers-color-scheme: dark)');
+  if (colorScheme) {
+    const updateSystemTheme = () => {
+      if (state.preferences.theme === 'system') applyPreferences();
+    };
+    if (colorScheme.addEventListener) colorScheme.addEventListener('change', updateSystemTheme);
+    else colorScheme.addListener(updateSystemTheme);
+  }
   renderLanding();
   setupSignup();
   setupDashboard();
