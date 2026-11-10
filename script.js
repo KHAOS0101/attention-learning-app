@@ -14,6 +14,7 @@ const initialState = {
   studyTasks: [],
   goalHistory: {},
   preferences: { theme: 'system', textSize: 'normal', onboardingComplete: false },
+  flashcards: [],
 };
 
 const defaultGoalLabels = {
@@ -91,10 +92,12 @@ function readState() {
       && task.title.trim().length > 0 && task.title.length <= 120
       && isValidDateKey(task.date) && (task.time === '' || task.time === null
         || (typeof task.time === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(task.time)))
-      && Number.isInteger(task.minutes) && task.minutes >= 5 && task.minutes <= 360)
+      && Number.isInteger(task.minutes) && task.minutes >= 5 && task.minutes <= 360
+      && [undefined, 'study', 'exam', 'assignment'].includes(task.type))
       .map((task) => ({
         id: task.id,
         title: task.title,
+        type: task.type || 'study',
         date: task.date,
         time: task.time || '',
         minutes: task.minutes,
@@ -108,6 +111,26 @@ function readState() {
     textSize: ['normal', 'large', 'larger'].includes(savedPreferences.textSize) ? savedPreferences.textSize : 'normal',
     onboardingComplete: savedPreferences.onboardingComplete === true,
   };
+  const flashcards = Array.isArray(parsed.flashcards)
+    ? parsed.flashcards.filter((card) => card && typeof card.id === 'string' && card.id.length <= 100
+      && typeof card.front === 'string' && card.front.trim().length > 0 && card.front.length <= 500
+      && typeof card.back === 'string' && card.back.trim().length > 0 && card.back.length <= 1000
+      && isValidDateKey(card.dueDate) && isValidDateKey(card.createdAt)
+      && Number.isInteger(card.intervalDays) && card.intervalDays >= 0 && card.intervalDays <= 3650
+      && Number.isInteger(card.repetitions) && card.repetitions >= 0 && card.repetitions <= 1000
+      && (card.lastReviewed === null || isValidDateKey(card.lastReviewed)))
+      .map((card) => ({
+        id: card.id,
+        front: card.front,
+        back: card.back,
+        dueDate: card.dueDate,
+        createdAt: card.createdAt,
+        intervalDays: card.intervalDays,
+        repetitions: card.repetitions,
+        lastReviewed: card.lastReviewed,
+      }))
+      .slice(0, 1000)
+    : [];
 
   return {
     ...JSON.parse(JSON.stringify(initialState)),
@@ -119,13 +142,33 @@ function readState() {
     journalEntries: Array.isArray(parsed.journalEntries)
       ? parsed.journalEntries.filter((entry) => entry && typeof entry.id === 'string' && typeof entry.text === 'string' && typeof entry.createdAt === 'string')
       : [],
-    sessions: Array.isArray(parsed.sessions) ? parsed.sessions : [],
+    sessions: Array.isArray(parsed.sessions)
+      ? parsed.sessions.filter((session) => session && isValidDateKey(session.date)
+        && Number.isInteger(session.minutes) && session.minutes >= 1 && session.minutes <= 1440)
+        .map((session) => ({
+          ...(typeof session.id === 'string' && session.id.length <= 100 ? { id: session.id } : {}),
+          date: session.date,
+          minutes: session.minutes,
+          reflection: session.reflection && typeof session.reflection === 'object'
+            && typeof session.reflection.completed === 'string' && session.reflection.completed.length <= 500
+            && typeof session.reflection.nextStep === 'string' && session.reflection.nextStep.length <= 300
+            && typeof session.reflection.createdAt === 'string'
+            && !Number.isNaN(Date.parse(session.reflection.createdAt))
+            ? {
+              completed: session.reflection.completed,
+              nextStep: session.reflection.nextStep,
+              createdAt: session.reflection.createdAt,
+            }
+            : null,
+        }))
+      : [],
     joinedGroups: Array.isArray(parsed.joinedGroups) ? parsed.joinedGroups : [],
     pomodoro,
     reminders,
     studyTasks,
     goalHistory,
     preferences,
+    flashcards,
   };
 }
 
@@ -352,6 +395,10 @@ function setupDashboard() {
   setupPrivacyControls();
   setupWeeklyTrends();
   setupStudyPlanner();
+  setupFlashcards();
+  setupSessionReflections();
+  setupGuidedBreaks();
+  setupWeeklyReview();
   setupPreferences();
   setupOnboarding();
   setupResourceSearch();
@@ -424,6 +471,13 @@ function setupStudyPlanner() {
     tasks.forEach((task) => {
       const item = document.createElement('article');
       item.className = 'planner-task';
+      const taskType = document.createElement('span');
+      taskType.className = `planner-task-type planner-task-type-${task.type || 'study'}`;
+      taskType.textContent = {
+        study: 'Estudo',
+        assignment: 'Etapa de trabalho',
+        exam: 'Prova ou entrega',
+      }[task.type || 'study'];
       const label = document.createElement('label');
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
@@ -442,7 +496,7 @@ function setupStudyPlanner() {
       remove.dataset.removePlannerTask = task.id;
       remove.setAttribute('aria-label', `Apagar tarefa: ${task.title}`);
       remove.textContent = 'Apagar';
-      item.append(label, detail, remove);
+      item.append(taskType, label, detail, remove);
       taskContainer.append(item);
     });
   }
@@ -484,6 +538,7 @@ function setupStudyPlanner() {
     if (!saveState()) return;
     renderPlanner();
     setupWeeklyTrends();
+    renderWeeklyReview();
   });
   taskContainer.addEventListener('click', (event) => {
     const button = event.target.closest('[data-remove-planner-task]');
@@ -492,6 +547,7 @@ function setupStudyPlanner() {
     if (!saveState()) return;
     renderPlanner();
     setupWeeklyTrends();
+    renderWeeklyReview();
   });
   form.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -514,6 +570,9 @@ function setupStudyPlanner() {
     state.studyTasks.push({
       id: `task-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       title,
+      type: ['study', 'exam', 'assignment'].includes(formData.get('type'))
+        ? String(formData.get('type'))
+        : 'study',
       date,
       time,
       minutes,
@@ -527,9 +586,308 @@ function setupStudyPlanner() {
     message.textContent = 'Passo adicionado ao seu planejamento.';
     renderPlanner();
     setupWeeklyTrends();
+    renderWeeklyReview();
     document.getElementById('plannerTaskTitle').focus();
   });
   renderPlanner();
+}
+
+function scheduleFlashcard(card, rating, reviewedAt = todayKey()) {
+  const date = new Date(`${reviewedAt}T12:00:00`);
+  if (rating === 'again') {
+    card.repetitions = 0;
+    card.intervalDays = 1;
+  } else {
+    card.repetitions = Math.min(1000, card.repetitions + 1);
+    const intervals = [1, 3, 7, 14, 30, 60, 90];
+    if (rating === 'easy') {
+      card.intervalDays = Math.min(3650, Math.max(4, Math.ceil(Math.max(1, card.intervalDays) * 1.5)));
+    } else {
+      card.intervalDays = intervals[Math.min(card.repetitions - 1, intervals.length - 1)];
+    }
+  }
+  date.setDate(date.getDate() + card.intervalDays);
+  card.dueDate = dateKey(date);
+  card.lastReviewed = reviewedAt;
+  return card;
+}
+
+function setupFlashcards() {
+  const form = document.getElementById('flashcardForm');
+  if (!form) return;
+  const review = document.getElementById('flashcardReview');
+  const question = document.getElementById('flashcardQuestion');
+  const answer = document.getElementById('flashcardAnswer');
+  const ratings = document.getElementById('flashcardRatings');
+  const list = document.getElementById('flashcardList');
+  let currentCardId = null;
+  let revealed = false;
+
+  function render() {
+    const dueCards = state.flashcards.filter((card) => card.dueDate <= todayKey())
+      .sort((first, second) => first.dueDate.localeCompare(second.dueDate)
+        || first.createdAt.localeCompare(second.createdAt));
+    document.getElementById('flashcardDueCount').textContent = `${dueCards.length} para revisar`;
+    currentCardId = dueCards[0]?.id || null;
+    review.hidden = !currentCardId;
+    document.getElementById('flashcardEmpty').hidden = Boolean(currentCardId);
+    revealed = false;
+    answer.hidden = true;
+    ratings.hidden = true;
+    document.getElementById('revealFlashcard').hidden = !currentCardId;
+    const currentCard = dueCards[0];
+    question.textContent = currentCard?.front || '';
+    answer.textContent = currentCard?.back || '';
+
+    list.replaceChildren();
+    if (state.flashcards.length === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'empty-state';
+      empty.textContent = 'Seus cartões aparecerão aqui.';
+      list.append(empty);
+      return;
+    }
+    state.flashcards.slice().sort((first, second) => first.dueDate.localeCompare(second.dueDate))
+      .forEach((card) => {
+        const item = document.createElement('article');
+        item.className = 'flashcard-list-item';
+        const text = document.createElement('p');
+        text.textContent = card.front;
+        const due = document.createElement('span');
+        due.textContent = `Revisão: ${new Intl.DateTimeFormat('pt-BR', { dateStyle: 'medium' }).format(new Date(`${card.dueDate}T12:00:00`))}`;
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'remove-goal-button';
+        remove.dataset.removeFlashcard = card.id;
+        remove.setAttribute('aria-label', `Apagar flashcard: ${card.front}`);
+        remove.textContent = 'Apagar';
+        item.append(text, due, remove);
+        list.append(item);
+      });
+  }
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const formData = new FormData(form);
+    const front = String(formData.get('front') || '').trim();
+    const back = String(formData.get('back') || '').trim();
+    const message = document.getElementById('flashcardMessage');
+    if (!front || front.length > 500 || !back || back.length > 1000) {
+      message.textContent = 'Preencha a pergunta e a resposta antes de salvar.';
+      return;
+    }
+    if (state.flashcards.length >= 1000) {
+      message.textContent = 'Você atingiu o limite de 1000 cartões. Apague alguns para criar novos.';
+      return;
+    }
+    state.flashcards.push({
+      id: `card-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      front,
+      back,
+      dueDate: todayKey(),
+      createdAt: todayKey(),
+      intervalDays: 0,
+      repetitions: 0,
+      lastReviewed: null,
+    });
+    if (!saveState()) return;
+    form.reset();
+    message.textContent = 'Cartão criado e pronto para revisar.';
+    render();
+    question.focus();
+  });
+
+  document.getElementById('revealFlashcard').addEventListener('click', () => {
+    if (!currentCardId) return;
+    revealed = true;
+    answer.hidden = false;
+    ratings.hidden = false;
+    document.getElementById('revealFlashcard').hidden = true;
+  });
+  ratings.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-flashcard-rating]');
+    if (!button || !revealed) return;
+    const card = state.flashcards.find((item) => item.id === currentCardId);
+    if (!card) return;
+    scheduleFlashcard(card, button.dataset.flashcardRating);
+    if (!saveState()) return;
+    document.getElementById('flashcardMessage').textContent = 'Próxima revisão ajustada ao que você lembrou.';
+    render();
+    renderWeeklyReview();
+  });
+  list.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-remove-flashcard]');
+    if (!button) return;
+    state.flashcards = state.flashcards.filter((card) => card.id !== button.dataset.removeFlashcard);
+    if (!saveState()) return;
+    render();
+  });
+  render();
+}
+
+function setupSessionReflections() {
+  const form = document.getElementById('reflectionForm');
+  if (!form) return;
+  const select = document.getElementById('reflectionSession');
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const session = state.sessions.find((item) => item.id === select.value && !item.reflection);
+    if (!session) {
+      renderSessionReflections();
+      return;
+    }
+    const completed = document.getElementById('reflectionDone').value.trim();
+    const nextStep = document.getElementById('reflectionNext').value.trim();
+    if (completed.length > 500 || nextStep.length > 300) return;
+    if (!completed && !nextStep) {
+      document.getElementById('reflectionMessage').textContent = 'Escreva algo ou deixe a reflexão para depois.';
+      return;
+    }
+    session.reflection = {
+      completed,
+      nextStep,
+      createdAt: new Date().toISOString(),
+    };
+    if (!saveState()) return;
+    form.reset();
+    document.getElementById('reflectionMessage').textContent = 'Reflexão salva neste dispositivo.';
+    renderSessionReflections();
+  });
+  renderSessionReflections();
+}
+
+function renderSessionReflections() {
+  const form = document.getElementById('reflectionForm');
+  const select = document.getElementById('reflectionSession');
+  if (!form || !select) return;
+  const sessions = state.sessions.filter((session) => session.id && !session.reflection)
+    .slice(-20).reverse();
+  select.replaceChildren();
+  sessions.forEach((session) => {
+    const option = document.createElement('option');
+    option.value = session.id;
+    option.textContent = `${new Intl.DateTimeFormat('pt-BR', { dateStyle: 'medium' }).format(new Date(`${session.date}T12:00:00`))} · ${session.minutes} min`;
+    select.append(option);
+  });
+  select.disabled = sessions.length === 0;
+  form.querySelector('button[type="submit"]').disabled = sessions.length === 0;
+  document.getElementById('reflectionMessage').textContent = sessions.length
+    ? 'A reflexão é opcional; deixe em branco o que não quiser registrar.'
+    : 'Quando uma sessão de foco terminar, ela aparecerá aqui para você refletir se desejar.';
+}
+
+function setupGuidedBreaks() {
+  const type = document.getElementById('guidedBreakType');
+  if (!type) return;
+  const instructions = {
+    breathing: {
+      duration: 60,
+      description: 'Sente-se como for confortável. Respire no seu ritmo, sem prender o ar; se não for bom para você, escolha outra pausa.',
+      phases: ['Inspire com suavidade, se for confortável.', 'Expire devagar, sem forçar.'],
+    },
+    stretch: {
+      duration: 45,
+      description: 'Se for confortável, movimente os ombros e braços suavemente. Sem forçar o pescoço ou qualquer movimento; pare se sentir desconforto.',
+      phases: [],
+    },
+    eyes: {
+      duration: 20,
+      description: 'Se puder, desvie o olhar da tela e observe algo distante. Você também pode simplesmente fechar os olhos ou descansar.',
+      phases: [],
+    },
+  };
+  let intervalId = null;
+  let remaining = 60;
+
+  function setInstructions() {
+    const activity = instructions[type.value] || instructions.breathing;
+    remaining = activity.duration;
+    document.getElementById('guidedBreakTimer').textContent = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(remaining % 60).padStart(2, '0')}`;
+    document.getElementById('guidedBreakInstruction').textContent = activity.description;
+    document.getElementById('guidedBreakStart').disabled = Boolean(intervalId);
+    document.getElementById('guidedBreakStop').disabled = !intervalId;
+  }
+
+  type.addEventListener('change', () => {
+    if (!intervalId) setInstructions();
+  });
+  document.getElementById('guidedBreakStart').addEventListener('click', () => {
+    if (intervalId) return;
+    const activity = instructions[type.value] || instructions.breathing;
+    remaining = activity.duration;
+    const status = document.getElementById('guidedBreakStatus');
+    const tick = () => {
+      remaining -= 1;
+      document.getElementById('guidedBreakTimer').textContent = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(remaining % 60).padStart(2, '0')}`;
+      if (type.value === 'breathing') {
+        const phase = (activity.duration - remaining) % 10;
+        document.getElementById('guidedBreakInstruction').textContent = phase < 4
+          ? activity.phases[0]
+          : activity.phases[1];
+      }
+      if (remaining <= 0) {
+        window.clearInterval(intervalId);
+        intervalId = null;
+        status.textContent = 'Pausa concluída. Continue no seu ritmo ou volte quando quiser.';
+        document.getElementById('guidedBreakStart').disabled = false;
+        document.getElementById('guidedBreakStop').disabled = true;
+      }
+    };
+    document.getElementById('guidedBreakStart').disabled = true;
+    document.getElementById('guidedBreakStop').disabled = false;
+    status.textContent = 'Pausa iniciada. Você pode parar a qualquer momento.';
+    intervalId = window.setInterval(tick, 1000);
+  });
+  document.getElementById('guidedBreakStop').addEventListener('click', () => {
+    window.clearInterval(intervalId);
+    intervalId = null;
+    document.getElementById('guidedBreakStatus').textContent = 'Pausa interrompida. Está tudo bem parar ou escolher outra atividade.';
+    setInstructions();
+  });
+  setInstructions();
+}
+
+function setupWeeklyReview() {
+  renderWeeklyReview();
+}
+
+function renderWeeklyReview(today = new Date()) {
+  const container = document.getElementById('weeklyReviewSummary');
+  if (!container) return;
+  container.replaceChildren();
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (6 - index));
+    return { date, key: dateKey(date) };
+  });
+  const start = days[0].date;
+  const end = days[6].date;
+  const dateFormat = new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'short' });
+  document.getElementById('weeklyReviewRange').textContent = `${dateFormat.format(start)} – ${dateFormat.format(end)}`;
+  const keys = new Set(days.map((day) => day.key));
+  const sessions = state.sessions.filter((session) => keys.has(session.date));
+  const plannedTasks = state.studyTasks.filter((task) => keys.has(task.date));
+  const completedTasks = plannedTasks.filter((task) => task.completed).length;
+  const loggedDays = days.filter(({ key }) => state.dailyLogs[key]).length;
+  const metrics = [
+    { title: 'Sessões de foco', value: sessions.length ? String(sessions.length) : 'Sem registros' },
+    { title: 'Minutos em foco', value: sessions.length ? `${sessions.reduce((sum, session) => sum + session.minutes, 0)} min` : 'Sem registros' },
+    { title: 'Check-ins registrados', value: loggedDays ? `${loggedDays} de 7 dias` : 'Sem registros' },
+    { title: 'Tarefas planejadas', value: plannedTasks.length ? `${completedTasks} de ${plannedTasks.length} concluídas` : 'Nenhuma tarefa planejada' },
+    { title: 'Cartões revisados', value: state.flashcards.some((card) => card.lastReviewed && keys.has(card.lastReviewed))
+      ? String(state.flashcards.filter((card) => card.lastReviewed && keys.has(card.lastReviewed)).length)
+      : 'Sem revisões registradas' },
+  ];
+  metrics.forEach(({ title, value }) => {
+    const item = document.createElement('article');
+    item.className = 'weekly-review-metric';
+    const label = document.createElement('h3');
+    label.textContent = title;
+    const number = document.createElement('p');
+    number.textContent = value;
+    item.append(label, number);
+    container.append(item);
+  });
 }
 
 function dateKey(date) {
@@ -590,12 +948,16 @@ function setupResourceSearch() {
   if (!input || !results) return;
   const resources = [
     { title: 'Planejamento semanal e tarefas', keywords: 'agenda calendário prazo tarefa organizar', href: '#studyPlanner' },
+    { title: 'Flashcards e revisão espaçada', keywords: 'memória lembrar cartões repetição ativa', href: '#flashcards' },
     { title: 'Pomodoro e foco', keywords: 'tempo sessão pausa timer concentração', href: '#focusTools' },
+    { title: 'Reflexão após o estudo', keywords: 'sessão aprender próximo passo reflexão', href: '#sessionReflection' },
     { title: 'Metas de hoje', keywords: 'meta objetivo progresso rotina', href: '#dailyGoals' },
     { title: 'Check-in de humor, sono e foco', keywords: 'emoção bem-estar diário humor sono', href: '#checkIn' },
     { title: 'Gráficos e tendências', keywords: 'histórico gráfico evolução progresso', href: '#progressTrends' },
+    { title: 'Resumo semanal', keywords: 'semana resumo revisar reflexão tarefas', href: '#weeklyReview' },
     { title: 'Escrita livre e diário', keywords: 'desabafo opinião escrever diário', href: '#personalJournal' },
     { title: 'Lembretes de pausa', keywords: 'notificação descanso intervalo', href: '#breakReminders' },
+    { title: 'Pausas guiadas', keywords: 'respiração alongamento olhos relaxar', href: '#guidedBreaks' },
     { title: 'Aparência e acessibilidade', keywords: 'tema escuro contraste texto leitura acessibilidade', href: '#personalization' },
     { title: 'Privacidade e backups', keywords: 'dados exportar importar apagar privacidade', href: '#privacyControls' },
     { title: 'Grupos de estudo', keywords: 'comunidade colegas grupo', href: 'comunidade.html' },
@@ -637,7 +999,7 @@ function setupPrivacyControls() {
     try {
       const exportData = {
         app: 'Attention Learning',
-        version: 2,
+        version: 3,
         exportedAt: new Date().toISOString(),
         note: 'Exportação de dados armazenados localmente pelo protótipo.',
         data: state,
@@ -717,7 +1079,7 @@ function validateBackup(backup) {
     && new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value;
 
   if (!isObject(backup) || backup.app !== 'Attention Learning'
-    || ![undefined, 1, 2].includes(backup.version) || !isObject(backup.data)) {
+    || ![undefined, 1, 2, 3].includes(backup.version) || !isObject(backup.data)) {
     throw invalid();
   }
   const data = backup.data;
@@ -758,8 +1120,24 @@ function validateBackup(backup) {
   if (data.sessions !== undefined) {
     if (!Array.isArray(data.sessions) || data.sessions.length > 10000
       || data.sessions.some((session) => !isObject(session) || !validDate(session.date)
-        || !Number.isInteger(session.minutes) || session.minutes < 1 || session.minutes > 1440)) throw invalid();
-    result.sessions = data.sessions.map(({ date, minutes }) => ({ date, minutes }));
+        || !Number.isInteger(session.minutes) || session.minutes < 1 || session.minutes > 1440
+        || (session.id !== undefined && (typeof session.id !== 'string' || !session.id || session.id.length > 100))
+        || (session.reflection !== undefined && session.reflection !== null
+          && (!isObject(session.reflection)
+            || typeof session.reflection.completed !== 'string' || session.reflection.completed.length > 500
+            || typeof session.reflection.nextStep !== 'string' || session.reflection.nextStep.length > 300
+            || typeof session.reflection.createdAt !== 'string'
+            || Number.isNaN(Date.parse(session.reflection.createdAt)))))) throw invalid();
+    result.sessions = data.sessions.map((session) => ({
+      ...(session.id ? { id: session.id } : {}),
+      date: session.date,
+      minutes: session.minutes,
+      reflection: session.reflection ? {
+        completed: session.reflection.completed,
+        nextStep: session.reflection.nextStep,
+        createdAt: session.reflection.createdAt,
+      } : null,
+    }));
   }
 
   if (data.dailyLogs !== undefined) {
@@ -813,13 +1191,36 @@ function validateBackup(backup) {
       || data.studyTasks.some((task) => !isObject(task) || typeof task.id !== 'string'
         || !task.id || task.id.length > 100 || typeof task.title !== 'string'
         || !task.title.trim() || task.title.length > 120 || !validDate(task.date)
+        || (task.type !== undefined && !['study', 'exam', 'assignment'].includes(task.type))
         || (task.time !== '' && task.time !== null
           && (typeof task.time !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(task.time)))
         || !Number.isInteger(task.minutes) || task.minutes < 5 || task.minutes > 360
         || typeof task.completed !== 'boolean')) throw invalid();
     result.studyTasks = data.studyTasks.map((task) => ({
-      id: task.id, title: task.title, date: task.date, time: task.time || '',
+      id: task.id, title: task.title, type: task.type || 'study', date: task.date, time: task.time || '',
       minutes: task.minutes, completed: task.completed,
+    }));
+  }
+
+  if (data.flashcards !== undefined) {
+    if (!Array.isArray(data.flashcards) || data.flashcards.length > 1000
+      || data.flashcards.some((card) => !isObject(card) || typeof card.id !== 'string'
+        || !card.id || card.id.length > 100 || typeof card.front !== 'string'
+        || !card.front.trim() || card.front.length > 500 || typeof card.back !== 'string'
+        || !card.back.trim() || card.back.length > 1000 || !validDate(card.dueDate)
+        || !validDate(card.createdAt) || !Number.isInteger(card.intervalDays)
+        || card.intervalDays < 0 || card.intervalDays > 3650
+        || !Number.isInteger(card.repetitions) || card.repetitions < 0 || card.repetitions > 1000
+        || (card.lastReviewed !== null && !validDate(card.lastReviewed)))) throw invalid();
+    result.flashcards = data.flashcards.map((card) => ({
+      id: card.id,
+      front: card.front,
+      back: card.back,
+      dueDate: card.dueDate,
+      createdAt: card.createdAt,
+      intervalDays: card.intervalDays,
+      repetitions: card.repetitions,
+      lastReviewed: card.lastReviewed,
     }));
   }
 
@@ -902,6 +1303,7 @@ function setupWeeklyTrends() {
   }
   document.getElementById('trendEmpty').hidden = recordedDays > 0;
   renderTrendCharts(today);
+  renderWeeklyReview(today);
 }
 
 function renderTrendCharts(today = new Date()) {
@@ -1296,9 +1698,17 @@ function setupTimer() {
         window.clearInterval(intervalId);
         intervalId = null;
         if (mode === 'focus') {
-          state.sessions.push({ date: todayKey(), minutes: modes.focus });
+          state.sessions.push({
+            id: `session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            date: todayKey(),
+            minutes: modes.focus,
+            reflection: null,
+          });
           state.goals.study = true;
-          saveState();
+          saveTodayGoalProgress();
+          renderSessionReflections();
+          renderWeeklyReview();
+          setupWeeklyTrends();
           refreshDashboardStats();
           message.textContent = 'Bloco concluído! Faça uma pausa ou inicie outro quando estiver pronto.';
         } else {
