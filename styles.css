@@ -2837,3 +2837,208 @@ body[data-theme="contrast"] .preset-button {
     margin-left: auto;
   }
 }
+
+.planner-task-type {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--panel-alt);
+  color: var(--primary-dark);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.planner-task-type-exam {
+  background: #fff1d6;
+  color: #704b00;
+}
+
+.planner-task-type-assignment {
+  background: #e9f7ef;
+  color: #17643b;
+}
+
+.flashcard-form,
+.reflection-form {
+  display: grid;
+  gap: 12px;
+  max-width: 760px;
+}
+
+.flashcard-review {
+  display: grid;
+  gap: 14px;
+  margin: 22px 0;
+  padding: clamp(18px, 4vw, 28px);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--panel-alt);
+}
+
+.flashcard-review .eyebrow,
+.flashcard-review h3 {
+  margin: 0;
+}
+
+.flashcard-review h3 {
+  font-size: clamp(1.2rem, 3vw, 1.65rem);
+}
+
+.flashcard-answer {
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--panel);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.flashcard-ratings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.flashcard-ratings .btn {
+  flex: 1 1 150px;
+}
+
+.flashcard-library {
+  margin-top: 16px;
+}
+
+.flashcard-library summary {
+  cursor: pointer;
+  color: var(--primary-dark);
+  font-weight: 700;
+}
+
+.flashcard-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.flashcard-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.flashcard-list-item p {
+  margin: 0;
+  font-weight: 600;
+}
+
+.flashcard-list-item span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.weekly-review-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.weekly-review-metric {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--panel-alt);
+}
+
+.weekly-review-metric h3 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.weekly-review-metric p {
+  margin: 10px 0 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.weekly-review-reflection {
+  padding: 18px;
+  border-radius: 14px;
+  background: var(--panel-alt);
+}
+
+.weekly-review-reflection h3,
+.weekly-review-reflection p {
+  margin: 0 0 10px;
+}
+
+.guided-break-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.guided-break-panel .panel-header,
+.guided-break-panel .muted-copy {
+  margin-bottom: 0;
+}
+
+.guided-break-instruction {
+  max-width: 720px;
+  min-height: 3em;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.guided-break-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.guided-break-controls > span {
+  min-width: 76px;
+  color: var(--secondary);
+  font-size: 1.4rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+body[data-theme="dark"] .planner-task-type-exam {
+  background: #473719;
+  color: #ffe4a3;
+}
+
+body[data-theme="dark"] .planner-task-type-assignment {
+  background: #183c2b;
+  color: #b6efc8;
+}
+
+@media (max-width: 640px) {
+  .flashcard-ratings {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .flashcard-list-item {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .flashcard-list-item .remove-goal-button {
+    margin-left: auto;
+  }
+
+  .guided-break-controls .btn {
+    flex: 1 1 140px;
+  }
+}

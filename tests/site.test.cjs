@@ -27,7 +27,7 @@ function createAppContext(savedState = null) {
 function makeBackup(overrides = {}) {
   return {
     app: 'Attention Learning',
-    version: 2,
+    version: 3,
     data: {
       profile: null,
       goals: { study: true, review: false, pause: false },
@@ -37,6 +37,7 @@ function makeBackup(overrides = {}) {
       customGoals: [],
       journalEntries: [],
       joinedGroups: [],
+      sessions: [],
       ...overrides,
     },
   };
@@ -68,6 +69,80 @@ test('new backups restore study tasks, goal history, and preferences', () => {
   assert.deepEqual(restored.preferences, backup.data.preferences);
 });
 
+test('version 3 backups restore flashcards, task types, and session reflections', () => {
+  const context = createAppContext();
+  const backup = makeBackup({
+    studyTasks: [{
+      id: 'exam-1',
+      title: 'Prova de biologia',
+      type: 'exam',
+      date: '2026-11-12',
+      time: '',
+      minutes: 25,
+      completed: false,
+    }],
+    flashcards: [{
+      id: 'card-1',
+      front: 'Qual é a função da mitocôndria?',
+      back: 'Participa da produção de energia celular.',
+      dueDate: '2026-11-10',
+      createdAt: '2026-11-09',
+      intervalDays: 1,
+      repetitions: 1,
+      lastReviewed: '2026-11-09',
+    }],
+    sessions: [{
+      id: 'session-1',
+      date: '2026-11-10',
+      minutes: 25,
+      reflection: {
+        completed: 'Revisei o capítulo.',
+        nextStep: 'Fazer exercícios.',
+        createdAt: '2026-11-10T12:00:00.000Z',
+      },
+    }],
+  });
+
+  const restored = validate(context, backup);
+  assert.deepEqual(restored.flashcards, backup.data.flashcards);
+  assert.equal(restored.studyTasks[0].type, 'exam');
+  assert.deepEqual(restored.sessions[0].reflection, backup.data.sessions[0].reflection);
+});
+
+test('flashcard ratings schedule increasing recall intervals and retry missed cards tomorrow', () => {
+  const context = createAppContext();
+  context.cardInput = JSON.stringify({
+    id: 'card-1',
+    dueDate: '2026-11-10',
+    intervalDays: 0,
+    repetitions: 0,
+    lastReviewed: null,
+  });
+  const nextGood = JSON.parse(vm.runInContext(
+    'JSON.stringify(scheduleFlashcard(JSON.parse(cardInput), "good", "2026-11-10"))',
+    context,
+  ));
+  assert.equal(nextGood.dueDate, '2026-11-11');
+  assert.equal(nextGood.intervalDays, 1);
+  assert.equal(nextGood.repetitions, 1);
+
+  context.cardInput = JSON.stringify(nextGood);
+  const secondGood = JSON.parse(vm.runInContext(
+    'JSON.stringify(scheduleFlashcard(JSON.parse(cardInput), "good", "2026-11-11"))',
+    context,
+  ));
+  assert.equal(secondGood.dueDate, '2026-11-14');
+  assert.equal(secondGood.intervalDays, 3);
+
+  context.cardInput = JSON.stringify(secondGood);
+  const missed = JSON.parse(vm.runInContext(
+    'JSON.stringify(scheduleFlashcard(JSON.parse(cardInput), "again", "2026-11-14"))',
+    context,
+  ));
+  assert.equal(missed.dueDate, '2026-11-15');
+  assert.equal(missed.repetitions, 0);
+});
+
 test('backup validation rejects malformed planner dates, times, and durations', () => {
   const context = createAppContext();
   for (const changes of [
@@ -88,10 +163,43 @@ test('backup validation rejects malformed planner dates, times, and durations', 
   }
 });
 
+test('backup validation rejects invalid flashcards and oversized session reflections', () => {
+  const context = createAppContext();
+  const validCard = {
+    id: 'card-1',
+    front: 'Pergunta',
+    back: 'Resposta',
+    dueDate: '2026-11-10',
+    createdAt: '2026-11-10',
+    intervalDays: 0,
+    repetitions: 0,
+    lastReviewed: null,
+  };
+  assert.throws(() => validate(context, makeBackup({
+    flashcards: [{ ...validCard, dueDate: '2026-02-30' }],
+  })), /backup válido/);
+
+  assert.throws(() => validate(context, makeBackup({
+    sessions: [{
+      id: 'session-1',
+      date: '2026-11-10',
+      minutes: 25,
+      reflection: {
+        completed: 'a'.repeat(501),
+        nextStep: '',
+        createdAt: '2026-11-10T12:00:00.000Z',
+      },
+    }],
+  })), /backup válido/);
+});
+
 test('legacy backups without new fields remain restorable', () => {
   const context = createAppContext();
-  const restored = validate(context, makeBackup());
+  const legacyBackup = makeBackup();
+  legacyBackup.version = 2;
+  const restored = validate(context, legacyBackup);
   assert.deepEqual(restored.studyTasks, []);
+  assert.deepEqual(restored.flashcards, []);
   assert.deepEqual(restored.goalHistory, {});
   assert.deepEqual(restored.preferences, {
     theme: 'system',

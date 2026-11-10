@@ -80,6 +80,14 @@
               <input id="plannerTaskTitle" name="title" type="text" maxlength="120" placeholder="Ex.: Ler as páginas 10–15" required />
               <div class="planner-form-row">
                 <div>
+                  <label for="plannerTaskType">Tipo</label>
+                  <select id="plannerTaskType" name="type">
+                    <option value="study">Passo de estudo</option>
+                    <option value="assignment">Etapa de trabalho</option>
+                    <option value="exam">Prova ou entrega</option>
+                  </select>
+                </div>
+                <div>
                   <label for="plannerTaskDate">Dia</label>
                   <input id="plannerTaskDate" name="date" type="date" required />
                 </div>
@@ -95,6 +103,38 @@
               <button class="btn btn-primary" type="submit">Adicionar ao planejamento</button>
               <p id="plannerMessage" class="form-message" role="status" aria-live="polite"></p>
             </form>
+          </section>
+
+          <section class="panel flashcard-panel" id="flashcards" aria-labelledby="flashcardsTitle">
+            <div class="panel-header">
+              <div><p class="eyebrow">Prática de recuperação</p><h2 id="flashcardsTitle">Flashcards e revisão espaçada</h2></div>
+              <span id="flashcardDueCount">0 para revisar</span>
+            </div>
+            <p class="muted-copy">Crie cartões com pergunta de um lado e resposta do outro. Tente lembrar antes de revelar; a próxima revisão é programada conforme sua avaliação, sem nota ou cobrança.</p>
+            <form id="flashcardForm" class="flashcard-form">
+              <label for="flashcardFront">Pergunta ou conceito</label>
+              <textarea id="flashcardFront" name="front" rows="2" maxlength="500" placeholder="Ex.: Qual é a função da mitocôndria?" required></textarea>
+              <label for="flashcardBack">Resposta breve</label>
+              <textarea id="flashcardBack" name="back" rows="2" maxlength="1000" placeholder="Escreva com suas palavras." required></textarea>
+              <button class="btn btn-primary" type="submit">Criar flashcard</button>
+              <p id="flashcardMessage" class="form-message" role="status" aria-live="polite"></p>
+            </form>
+            <div id="flashcardReview" class="flashcard-review" hidden>
+              <p class="eyebrow">Cartão para revisar</p>
+              <h3 id="flashcardQuestion" tabindex="-1"></h3>
+              <div id="flashcardAnswer" class="flashcard-answer" hidden></div>
+              <button class="btn btn-secondary" id="revealFlashcard" type="button">Revelar resposta</button>
+              <div id="flashcardRatings" class="flashcard-ratings" hidden>
+                <button class="btn btn-secondary" type="button" data-flashcard-rating="again">Preciso rever</button>
+                <button class="btn btn-primary" type="button" data-flashcard-rating="good">Lembrei</button>
+                <button class="btn btn-secondary" type="button" data-flashcard-rating="easy">Foi fácil</button>
+              </div>
+            </div>
+            <p id="flashcardEmpty" class="empty-state" hidden>Nenhum cartão para revisar agora. Seus cartões ficam salvos neste navegador.</p>
+            <details class="flashcard-library">
+              <summary>Ver todos os meus cartões</summary>
+              <div id="flashcardList" class="flashcard-list"></div>
+            </details>
           </section>
 
           <div class="dashboard-grid dashboard-workspace">
@@ -142,6 +182,23 @@
               </form>
             </section>
           </div>
+
+          <section class="panel reflection-panel" id="sessionReflection" aria-labelledby="reflectionTitle">
+            <div class="panel-header">
+              <div><p class="eyebrow">Sem notas, no seu tempo</p><h2 id="reflectionTitle">Reflexão após o estudo</h2></div>
+            </div>
+            <p class="muted-copy">Se quiser, registre o que conseguiu fazer e um próximo passo possível. Não precisa concluir nem escrever muito; seus registros ficam só neste dispositivo.</p>
+            <form id="reflectionForm" class="reflection-form">
+              <label for="reflectionSession">Sessão</label>
+              <select id="reflectionSession" name="sessionId"></select>
+              <label for="reflectionDone">O que consegui fazer?</label>
+              <textarea id="reflectionDone" name="completed" rows="2" maxlength="500" placeholder="Uma frase já basta."></textarea>
+              <label for="reflectionNext">Qual é um próximo passo possível?</label>
+              <textarea id="reflectionNext" name="nextStep" rows="2" maxlength="300" placeholder="Pode ser descansar, retomar depois ou mudar o plano."></textarea>
+              <button class="btn btn-primary" type="submit">Guardar reflexão</button>
+              <p id="reflectionMessage" class="form-message" role="status" aria-live="polite"></p>
+            </form>
+          </section>
 
           <div class="split-layout dashboard-lower">
             <section class="panel" id="checkIn" aria-labelledby="diaryTitle">
@@ -205,6 +262,20 @@
             <p id="trendEmpty" class="empty-state" hidden>Ainda não há registros neste período. Você pode começar com o check-in diário, no seu tempo.</p>
           </section>
 
+          <section class="panel weekly-review" id="weeklyReview" aria-labelledby="weeklyReviewTitle">
+            <div class="panel-header">
+              <div><p class="eyebrow">Resumo sem julgamentos</p><h2 id="weeklyReviewTitle">Sua semana em perspectiva</h2></div>
+              <span id="weeklyReviewRange"></span>
+            </div>
+            <p class="muted-copy">Um resumo dos registros e atividades dos últimos sete dias. Os dados não indicam desempenho ou saúde e não há uma meta ideal.</p>
+            <div id="weeklyReviewSummary" class="weekly-review-grid" aria-live="polite"></div>
+            <div class="weekly-review-reflection">
+              <h3>Se quiser refletir</h3>
+              <p>O que valeu a pena nesta semana? O que você gostaria de ajustar ou manter na próxima?</p>
+              <a class="btn btn-secondary" href="#personalJournal">Escrever no meu diário</a>
+            </div>
+          </section>
+
           <section class="panel reminders-panel" id="breakReminders" aria-labelledby="remindersTitle">
             <div class="panel-header">
               <div>
@@ -228,6 +299,26 @@
               <button class="btn btn-secondary" type="submit">Salvar preferências</button>
             </form>
             <p id="reminderStatus" class="form-message" role="status" aria-live="polite"></p>
+          </section>
+
+          <section class="panel guided-break-panel" id="guidedBreaks" aria-labelledby="guidedBreakTitle">
+            <div class="panel-header">
+              <div><p class="eyebrow">Opcional · você decide o ritmo</p><h2 id="guidedBreakTitle">Uma pausa guiada</h2></div>
+            </div>
+            <p class="muted-copy">Escolha uma atividade breve para mudar de foco entre estudos. São sugestões gerais de bem-estar, não tratamento; pule ou pare se algo não for confortável.</p>
+            <label for="guidedBreakType">Escolha uma pausa</label>
+            <select id="guidedBreakType">
+              <option value="breathing">Respiração tranquila · 1 minuto</option>
+              <option value="stretch">Movimento leve · 45 segundos</option>
+              <option value="eyes">Descansar a visão · 20 segundos</option>
+            </select>
+            <p id="guidedBreakInstruction" class="guided-break-instruction">Sente-se como for confortável. Respire no seu ritmo, sem prender o ar; se não for bom para você, escolha outra pausa.</p>
+            <div class="guided-break-controls">
+              <span id="guidedBreakTimer" aria-live="off">01:00</span>
+              <button class="btn btn-primary" id="guidedBreakStart" type="button">Começar pausa</button>
+              <button class="btn btn-secondary" id="guidedBreakStop" type="button" disabled>Parar</button>
+            </div>
+            <p id="guidedBreakStatus" class="form-message" role="status" aria-live="polite"></p>
           </section>
 
           <section class="panel journal-panel" id="personalJournal" aria-labelledby="journalTitle">
