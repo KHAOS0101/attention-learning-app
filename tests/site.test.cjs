@@ -54,6 +54,7 @@ test('new backups restore study tasks, goal history, and preferences', () => {
     studyTasks: [{
       id: 'task-1',
       title: 'Revisar um capítulo',
+      type: 'study',
       date: '2026-11-11',
       time: '14:30',
       minutes: 25,
