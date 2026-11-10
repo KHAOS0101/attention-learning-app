@@ -41,6 +41,12 @@
           <p class="storage-notice">Protótipo: seus dados ficam salvos localmente neste navegador.</p>
           <p class="psychology-disclaimer">Este painel apoia o autoconhecimento e não oferece diagnóstico nem substitui acompanhamento psicológico.</p>
           <p class="form-message" id="storageError" role="alert" hidden></p>
+          <section class="resource-finder" aria-labelledby="resourceSearchTitle">
+            <label id="resourceSearchTitle" for="resourceSearch">O que você quer fazer agora?</label>
+            <input id="resourceSearch" type="search" autocomplete="off" placeholder="Busque metas, planejamento, humor, apoio..." aria-describedby="resourceSearchHelp" />
+            <p id="resourceSearchHelp" class="muted-copy">Encontre uma ferramenta do site sem precisar navegar por todas as seções.</p>
+            <ul id="resourceSearchResults" class="resource-search-results" aria-live="polite" hidden></ul>
+          </section>
           <div class="stats-grid dashboard-stats">
             <article><strong id="sessionsCount">0</strong><span>Sessões de foco hoje</span></article>
             <article><strong id="focusMinutes">0 min</strong><span>Tempo focado hoje</span></article>
@@ -48,8 +54,51 @@
             <article><strong id="goalSummary">0/3</strong><span>Metas concluídas</span></article>
           </div>
 
+          <section class="panel study-planner" id="studyPlanner" aria-labelledby="plannerTitle">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Organização flexível</p>
+                <h2 id="plannerTitle">Planejamento semanal</h2>
+              </div>
+              <div class="planner-navigation" aria-label="Navegar pelo calendário">
+                <button class="btn btn-secondary" id="plannerPreviousWeek" type="button" aria-label="Semana anterior">←</button>
+                <button class="btn btn-secondary" id="plannerCurrentWeek" type="button">Esta semana</button>
+                <button class="btn btn-secondary" id="plannerNextWeek" type="button" aria-label="Próxima semana">→</button>
+              </div>
+            </div>
+            <p id="plannerWeekLabel" class="muted-copy" aria-live="polite"></p>
+            <div id="plannerWeek" class="planner-week" role="group" aria-label="Escolha um dia para ver as tarefas"></div>
+            <div class="planner-day">
+              <h3 id="plannerDayTitle"></h3>
+              <div id="plannerTasks" class="planner-tasks"></div>
+              <p id="plannerEmpty" class="empty-state" hidden>Nenhuma tarefa para este dia. Se quiser, adicione um próximo passo pequeno.</p>
+            </div>
+            <form id="plannerTaskForm" class="planner-form">
+              <h3>Adicionar um passo de estudo</h3>
+              <p class="muted-copy">Quebre uma atividade grande em algo que caiba em 15–30 minutos. Você pode ajustar ou apagar depois.</p>
+              <label for="plannerTaskTitle">Tarefa ou próximo passo</label>
+              <input id="plannerTaskTitle" name="title" type="text" maxlength="120" placeholder="Ex.: Ler as páginas 10–15" required />
+              <div class="planner-form-row">
+                <div>
+                  <label for="plannerTaskDate">Dia</label>
+                  <input id="plannerTaskDate" name="date" type="date" required />
+                </div>
+                <div>
+                  <label for="plannerTaskTime">Horário (opcional)</label>
+                  <input id="plannerTaskTime" name="time" type="time" />
+                </div>
+                <div>
+                  <label for="plannerTaskMinutes">Tempo estimado (minutos)</label>
+                  <input id="plannerTaskMinutes" name="minutes" type="number" min="5" max="360" step="5" value="25" required />
+                </div>
+              </div>
+              <button class="btn btn-primary" type="submit">Adicionar ao planejamento</button>
+              <p id="plannerMessage" class="form-message" role="status" aria-live="polite"></p>
+            </form>
+          </section>
+
           <div class="dashboard-grid dashboard-workspace">
-            <section class="panel timer-panel" aria-labelledby="timerTitle">
+            <section class="panel timer-panel" id="focusTools" aria-labelledby="timerTitle">
               <div class="panel-header"><h2 id="timerTitle">Pomodoro</h2><span id="timerModeLabel">Foco</span></div>
               <p class="muted-copy">Escolha um bloco e comece quando estiver pronto.</p>
               <div class="timer-display" id="pomodoroTimer" aria-live="off">25:00</div>
@@ -75,7 +124,7 @@
               </details>
             </section>
 
-            <section class="panel" aria-labelledby="goalsTitle">
+            <section class="panel" id="dailyGoals" aria-labelledby="goalsTitle">
               <div class="panel-header"><h2 id="goalsTitle">Metas de hoje</h2><span>Salvas automaticamente</span></div>
               <div class="goal-list" id="goalList">
                 <label class="goal-item"><input type="checkbox" data-goal="study" /><span><strong>Fazer uma sessão de foco</strong><small>Comece com 25 minutos</small></span></label>
@@ -95,7 +144,7 @@
           </div>
 
           <div class="split-layout dashboard-lower">
-            <section class="panel" aria-labelledby="diaryTitle">
+            <section class="panel" id="checkIn" aria-labelledby="diaryTitle">
               <div class="panel-header"><h2 id="diaryTitle">Check-in emocional</h2><span>Hoje</span></div>
               <form id="diaryForm" class="diary-form">
                 <label for="sleepHours">Horas de sono</label>
@@ -130,15 +179,22 @@
             </section>
           </div>
 
-          <section class="panel trends-panel" aria-labelledby="trendsTitle">
+          <section class="panel trends-panel" id="progressTrends" aria-labelledby="trendsTitle">
             <div class="panel-header">
               <div>
                 <p class="eyebrow">Observação pessoal</p>
-                <h2 id="trendsTitle">Seus últimos 7 dias</h2>
+                <h2 id="trendsTitle">Tendências dos últimos 7 dias</h2>
               </div>
               <span>Sem avaliações ou diagnósticos</span>
             </div>
-            <p class="muted-copy">Veja os registros que você escolheu fazer. Os espaços sem dados ficam em branco — não existe uma meta ideal aqui.</p>
+            <p class="muted-copy">São apenas os dados que você registrou: não preenchemos lacunas nem comparamos você com outras pessoas. Humor é mostrado como categoria, sem pontuação de bom ou ruim.</p>
+            <div class="trend-charts">
+              <section class="trend-chart-card" aria-labelledby="sleepChartTitle"><h3 id="sleepChartTitle">Sono registrado</h3><div id="sleepChart" class="trend-chart"></div></section>
+              <section class="trend-chart-card" aria-labelledby="focusChartTitle"><h3 id="focusChartTitle">Foco percebido</h3><div id="focusChart" class="trend-chart"></div></section>
+              <section class="trend-chart-card" aria-labelledby="moodChartTitle"><h3 id="moodChartTitle">Humor registrado</h3><div id="moodChart" class="mood-chart"></div></section>
+              <section class="trend-chart-card" aria-labelledby="studyChartTitle"><h3 id="studyChartTitle">Minutos de estudo</h3><div id="studyChart" class="trend-chart"></div></section>
+              <section class="trend-chart-card" aria-labelledby="goalChartTitle"><h3 id="goalChartTitle">Metas concluídas</h3><div id="goalChart" class="trend-chart"></div></section>
+            </div>
             <div class="trend-table-wrap" tabindex="0" role="region" aria-label="Tabela de registros dos últimos sete dias">
               <table class="trend-table">
                 <caption>Humor, horas de sono e foco registrados nos últimos sete dias</caption>
@@ -149,7 +205,7 @@
             <p id="trendEmpty" class="empty-state" hidden>Ainda não há registros neste período. Você pode começar com o check-in diário, no seu tempo.</p>
           </section>
 
-          <section class="panel reminders-panel" aria-labelledby="remindersTitle">
+          <section class="panel reminders-panel" id="breakReminders" aria-labelledby="remindersTitle">
             <div class="panel-header">
               <div>
                 <p class="eyebrow">Opcional e ajustável</p>
@@ -174,7 +230,7 @@
             <p id="reminderStatus" class="form-message" role="status" aria-live="polite"></p>
           </section>
 
-          <section class="panel journal-panel" aria-labelledby="journalTitle">
+          <section class="panel journal-panel" id="personalJournal" aria-labelledby="journalTitle">
             <div class="panel-header">
               <div>
                 <p class="eyebrow">Um espaço só seu</p>
@@ -200,11 +256,41 @@
             </div>
           </section>
 
-          <section class="panel privacy-panel" aria-labelledby="privacyTitle">
+          <section class="panel preferences-panel" id="personalization" aria-labelledby="preferencesTitle">
+            <div class="panel-header">
+              <div><p class="eyebrow">Seu espaço, seu jeito</p><h2 id="preferencesTitle">Aparência e leitura</h2></div>
+            </div>
+            <form id="preferencesForm" class="preferences-form">
+              <div>
+                <label for="themePreference">Tema</label>
+                <select id="themePreference" name="theme">
+                  <option value="system">Seguir o dispositivo</option>
+                  <option value="light">Claro</option>
+                  <option value="dark">Escuro</option>
+                  <option value="contrast">Alto contraste</option>
+                </select>
+              </div>
+              <div>
+                <label for="textSizePreference">Tamanho do texto</label>
+                <select id="textSizePreference" name="textSize">
+                  <option value="normal">Padrão</option>
+                  <option value="large">Grande</option>
+                  <option value="larger">Muito grande</option>
+                </select>
+              </div>
+              <button class="btn btn-secondary" type="submit">Salvar preferências</button>
+              <button class="btn btn-secondary" id="showWelcomeGuide" type="button">Ver guia inicial</button>
+            </form>
+            <p id="preferencesMessage" class="form-message" role="status" aria-live="polite"></p>
+          </section>
+
+          <section class="panel privacy-panel" id="privacyControls" aria-labelledby="privacyTitle">
             <div>
               <p class="eyebrow">Privacidade e controle</p>
               <h2 id="privacyTitle">Seus dados são seus.</h2>
-              <p>Este protótipo guarda informações somente no armazenamento local deste navegador; não há conta, nuvem ou envio para a equipe. Exportar baixa uma cópia JSON de todos os dados do app. Restaurar substitui os dados atuais por uma cópia JSON criada pelo Attention Learning. Apagar remove o perfil, metas, registros, diário e grupos salvos deste navegador.</p>
+              <p>Este site não tem conta nem servidor: os dados ficam neste navegador, não são enviados à equipe e não sincronizam entre dispositivos. O armazenamento local não é criptografado pelo app; em um aparelho compartilhado, outras pessoas com acesso ao seu perfil do navegador podem ver os registros. Use o bloqueio de tela do dispositivo e evite salvar conteúdo sensível.</p>
+              <p>Uma senha no site, sem criptografia real, daria uma falsa impressão de proteção. Sincronização segura entre dispositivos também exige um backend, autenticação e revisão de segurança — por isso não é ativada neste protótipo.</p>
+              <p>Exportar baixa um backup JSON. Restaurar substitui os dados atuais; apagar remove perfil, metas, tarefas, registros, diário e grupos deste navegador.</p>
             </div>
             <div class="privacy-actions">
               <button class="btn btn-secondary" id="exportData" type="button">Exportar meus dados</button>
@@ -217,6 +303,20 @@
         </div>
       </section>
     </main>
+    <dialog id="welcomeDialog" class="welcome-dialog" aria-labelledby="welcomeTitle" aria-describedby="welcomeDescription">
+      <div class="welcome-dialog-content">
+        <p class="eyebrow">Bem-vindo ao seu espaço</p>
+        <h2 id="welcomeTitle">Comece com um passo de cada vez.</h2>
+        <p id="welcomeDescription">Este guia rápido mostra algumas formas de usar o Attention Learning. Você escolhe o que faz sentido para sua rotina.</p>
+        <ol>
+          <li><strong>Planeje uma tarefa pequena</strong><span>Escolha um dia e um próximo passo possível.</span></li>
+          <li><strong>Observe seu ritmo</strong><span>Se quiser, registre humor, sono e foco — sem metas ideais.</span></li>
+          <li><strong>Busque apoio quando precisar</strong><span>A página de apoio reúne recursos externos no Brasil.</span></li>
+        </ol>
+        <p class="muted-copy">Seus dados ficam neste navegador. O site é educativo e não substitui cuidado psicológico.</p>
+        <button class="btn btn-primary" id="finishWelcomeGuide" type="button">Entendi, vamos começar</button>
+      </div>
+    </dialog>
     <footer class="site-footer">
       <div class="container footer-row"><p>© <span data-current-year></span> Attention Learning</p><p>Seu ritmo também é progresso.</p><a href="apoio.html">Encontrar apoio</a></div>
     </footer>
