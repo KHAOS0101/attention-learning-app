@@ -3352,6 +3352,63 @@ body[data-theme="dark"] .psychology-disclaimer {
   line-height: 1.25;
 }
 
+.dashboard-page .timer-panel {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+
+.dashboard-page .timer-panel .panel-header,
+.dashboard-page .timer-panel > .muted-copy,
+.dashboard-page .timer-panel .timer-display,
+.dashboard-page .timer-panel .timer-presets,
+.dashboard-page .timer-panel .timer-actions,
+.dashboard-page .timer-panel .form-message,
+.dashboard-page .timer-panel .timer-settings {
+  margin: 0;
+}
+
+.dashboard-page .timer-display {
+  margin: 4px 0;
+  line-height: 1.1;
+}
+
+.dashboard-page .timer-presets {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dashboard-page .timer-presets .preset-button {
+  min-width: 0;
+  min-height: 48px;
+  padding: 10px 12px;
+  line-height: 1.4;
+}
+
+.dashboard-page .timer-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.dashboard-page .timer-actions .btn {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding-inline: 12px;
+}
+
+.dashboard-page .timer-settings {
+  margin-top: 4px;
+  padding-top: 16px;
+}
+
+.dashboard-page .timer-settings summary {
+  padding: 6px 0;
+}
+
 .dashboard-page .trend-chart-card {
   overflow-x: auto;
 }
@@ -3401,6 +3458,15 @@ body[data-theme="dark"] .psychology-disclaimer {
     grid-template-columns: 1fr;
   }
 
+  .dashboard-page .timer-panel {
+    gap: 18px;
+  }
+
+  .dashboard-page .timer-presets,
+  .dashboard-page .timer-actions {
+    gap: 12px;
+  }
+
   .dashboard-page .dashboard-workspace {
     gap: 16px;
     margin-top: 20px;
@@ -3414,6 +3480,12 @@ body[data-theme="dark"] .psychology-disclaimer {
 @media (max-width: 380px) {
   .dashboard-page > .container > .panel {
     padding: 20px;
+  }
+
+  .dashboard-page .timer-presets .preset-button,
+  .dashboard-page .timer-actions .btn {
+    padding-inline: 8px;
+    font-size: 0.9rem;
   }
 
   .dashboard-page .panel-header {
