@@ -1691,6 +1691,7 @@ function setupTimer() {
       return;
     }
 
+    if (secondsLeft <= 0) secondsLeft = modes[mode] * 60;
     intervalId = window.setInterval(() => {
       secondsLeft -= 1;
       renderTime();
