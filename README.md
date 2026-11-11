@@ -1,5 +1,7 @@
 # Attention Learning App
 
+**Trabalho da MYRELLA**
+
 Aplicativo de psicologia aplicada à aprendizagem e ao bem-estar estudantil, com ferramentas de autoconhecimento sobre atenção, emoções e hábitos de estudo. O protótipo oferece apoio educativo e não substitui avaliação, diagnóstico ou acompanhamento psicológico profissional.
 
 ## Stack
