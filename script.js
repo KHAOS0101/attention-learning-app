@@ -883,58 +883,184 @@ function setupMindfulness() {
 
   const practices = {
     breath: {
-      duration: 120,
+      range: '3 a 5 minutos',
+      objective: 'estabilizar a atenção usando a respiração natural como ponto de retorno.',
+      durations: [180, 240, 300],
+      defaultDuration: 240,
       steps: [
-        'Acomode-se como for confortável. Você pode manter os olhos abertos e notar o apoio do corpo.',
-        'Perceba a respiração como ela está, sem tentar mudá-la. Se preferir, escolha um som ou ponto de contato como foco.',
-        'Quando notar que a atenção se afastou, reconheça isso com gentileza e volte ao ponto que escolheu.',
-        'Observe mais um instante. Não é preciso esvaziar a mente nem fazer a prática de um jeito perfeito.',
+        'Sente-se ou fique em uma posição segura e confortável. Deixe os olhos abertos ou fechados, como preferir.',
+        'Note onde a respiração aparece com mais clareza: no nariz, no peito ou no abdômen. Deixe o ar entrar e sair sozinho.',
+        'Quando perceber que se distraiu, pense “minha atenção se afastou” e volte gentilmente à sensação da respiração. Isso também faz parte da prática.',
+        'Continue observando sem tentar esvaziar a mente. Se focar na respiração não for confortável, escolha os sons ou o contato dos pés com o chão.',
       ],
     },
-    senses: {
-      duration: 150,
+    'paced-breath': {
+      range: '2 a 5 minutos',
+      objective: 'experimentar uma expiração um pouco mais longa, sem forçar o ritmo.',
+      durations: [120, 180, 240, 300],
+      defaultDuration: 180,
       steps: [
-        'Olhe ao redor e note algumas cores, formas ou detalhes que chamem sua atenção.',
-        'Perceba os sons próximos ou distantes, sem precisar identificá-los todos.',
-        'Note os pontos em que o corpo toca a cadeira, o chão ou outra superfície.',
-        'Se for confortável, perceba algum cheiro ou sabor presente; não é necessário procurar.',
-        'Olhe ao redor novamente e escolha um próximo passo pequeno para o seu momento.',
+        'Acomode-se e faça algumas respirações naturais. Só experimente a contagem se estiver confortável; não prenda o ar.',
+        'Ao inspirar, conte mentalmente até 4 em um ritmo tranquilo. Ao expirar, conte até 6, sem esvaziar os pulmões à força.',
+        'Repita no seu próprio ritmo. Se faltar ar, a contagem parecer difícil ou surgir desconforto, pare de contar e respire naturalmente.',
+        'Deixe a contagem de lado e note o apoio do corpo. Não há problema se cada respiração durar um tempo diferente.',
       ],
     },
-    transition: {
-      duration: 120,
+    'body-scan': {
+      range: '5 a 10 minutos',
+      objective: 'aumentar a percepção das sensações corporais, sem precisar mudá-las.',
+      durations: [300, 360, 420, 480, 540, 600],
+      defaultDuration: 420,
       steps: [
-        'Faça uma pausa e perceba como está sua postura, sem exigir que ela mude.',
-        'Note o ambiente ao redor e escolha um detalhe para observar por alguns instantes.',
-        'Pense em uma tarefa pequena que gostaria de iniciar ou retomar, sem se cobrar por concluí-la.',
-        'Quando estiver pronto, volte a atenção para esse primeiro passo. Você também pode escolher descansar.',
+        'Comece pelos pés. Note contato com o chão, temperatura ou formigamento; se não notar nada, tudo bem.',
+        'Leve a atenção às pernas e ao quadril. Observe as sensações como elas são, sem avaliar ou tentar relaxar à força.',
+        'Perceba barriga, peito, costas e mãos. Se a mente viajar, retome a região do corpo que estava observando.',
+        'Note ombros, pescoço e rosto. Você não precisa percorrer o corpo perfeitamente nem encontrar uma sensação especial.',
+        'Por fim, perceba o corpo como um todo e o apoio da cadeira ou do chão. Abra os olhos se estavam fechados.',
+      ],
+    },
+    sounds: {
+      range: '3 a 7 minutos',
+      objective: 'treinar presença e receptividade aos sons do ambiente.',
+      durations: [180, 240, 300, 360, 420],
+      defaultDuration: 300,
+      steps: [
+        'Escolha uma posição confortável e segura. Você pode manter os olhos abertos; não precisa procurar silêncio.',
+        'Escute os sons mais próximos. Note volume, ritmo ou duração, sem precisar descobrir o que os produziu.',
+        'Agora perceba sons mais distantes e também os intervalos entre eles. Se não ouvir algo, apenas note isso.',
+        'Quando surgir um pensamento sobre um som, reconheça o pensamento e volte a escutar. Termine percebendo o ambiente todo.',
+      ],
+    },
+    'belly-breath': {
+      range: '3 a 5 minutos',
+      objective: 'usar uma sensação física simples como apoio para a atenção.',
+      durations: [180, 240, 300],
+      defaultDuration: 240,
+      steps: [
+        'Se for confortável, coloque uma mão sobre o abdômen. Também pode deixá-la ao lado do corpo.',
+        'Perceba se a região se move um pouco quando o ar entra e sai. Não empurre a barriga nem tente respirar mais fundo.',
+        'Acompanhe algumas respirações. Se não notar movimento, sinta apenas a mão ou o contato do corpo com a roupa.',
+        'Quando se distrair, volte à sensação escolhida. Se prestar atenção à respiração incomodar, mude para os sons ou os pés no chão.',
+      ],
+    },
+    'daily-activity': {
+      range: '1 a 3 minutos',
+      objective: 'trazer atenção para uma ação simples do cotidiano.',
+      durations: [60, 120, 180],
+      defaultDuration: 120,
+      steps: [
+        'Escolha uma ação segura e simples, como beber água ou lavar as mãos. Não faça isso enquanto dirige ou precisa estar atento a outro risco.',
+        'Antes de começar, note a posição do corpo e o que está prestes a fazer.',
+        'Durante a ação, perceba detalhes: temperatura da água, contato das mãos ou o copo na mão. Não precisa fazer mais devagar se isso for estranho.',
+        'Se pensar em outra coisa, volte a um detalhe da ação. Ao terminar, perceba que concluiu esse pequeno momento.',
+      ],
+    },
+    emotions: {
+      range: '3 a 6 minutos',
+      objective: 'reconhecer emoções e sensações sem exigir que desapareçam.',
+      durations: [180, 240, 300, 360],
+      defaultDuration: 240,
+      steps: [
+        'Sente-se em um lugar seguro e perceba como está agora. Você não precisa provocar nenhuma emoção.',
+        'Se uma emoção estiver presente, nomeie-a com delicadeza, como “ansiedade”, “tristeza” ou “calma”. Se não souber, diga “não sei”.',
+        'Note se há alguma sensação no corpo associada a ela. Observe sem tentar explicar, consertar ou aumentar a sensação.',
+        'Lembre-se de que não é preciso sentir gratidão ou calma. Se a prática ficar intensa, abra os olhos, note um objeto ao redor e pare.',
+      ],
+    },
+    gratitude: {
+      range: '3 a 5 minutos',
+      objective: 'perceber algo que você valoriza, sem forçar positividade.',
+      durations: [180, 240, 300],
+      defaultDuration: 240,
+      steps: [
+        'Pense em uma coisa, pessoa ou momento pequeno que você valoriza. Pode ser algo simples do dia.',
+        'Fique alguns instantes com essa lembrança. O que aconteceu? O que fez esse momento ser importante para você?',
+        'Se quiser, escolha mais uma ou duas coisas e repita. Não precisa encontrar três nem sentir uma emoção específica.',
+        'Se nada vier à mente ou gratidão não fizer sentido agora, escolha algo neutro que lhe ofereça apoio, como uma cadeira ou um copo de água.',
+      ],
+    },
+    'thought-clouds': {
+      range: '4 a 8 minutos',
+      objective: 'notar pensamentos sem precisar segui-los ou afastá-los.',
+      durations: [240, 300, 360, 420, 480],
+      defaultDuration: 360,
+      steps: [
+        'Acomode-se e imagine, se isso ajudar, um céu amplo. Não precisa visualizar nada com clareza.',
+        'Quando aparecer um pensamento, note “estou tendo um pensamento”. Imagine que ele passa como uma nuvem, sem empurrá-lo.',
+        'Se começar a seguir a história do pensamento, perceba isso com gentileza e volte a notar o próximo pensamento ou o ambiente.',
+        'Os pensamentos podem continuar aparecendo; o objetivo não é esvaziar a mente. Se a imagem de nuvens não ajudar, escute os sons ao redor.',
+      ],
+    },
+    'mindful-pause': {
+      range: '30 segundos a 2 minutos',
+      objective: 'criar um breve momento de presença entre atividades.',
+      durations: [30, 60, 90, 120],
+      defaultDuration: 60,
+      steps: [
+        'Pare apenas se estiver em um lugar seguro. Note os pés no chão ou o corpo apoiado, sem precisar fechar os olhos.',
+        'Perceba um detalhe do ambiente e como você está agora. Respire naturalmente; não é necessário respirar fundo.',
+        'Escolha o próximo passo pequeno: continuar, fazer uma pausa maior ou pedir ajuda. Você pode encerrar antes do temporizador.',
       ],
     },
   };
+  const durationSelect = document.getElementById('mindfulnessDuration');
+  const practiceDetails = document.getElementById('mindfulnessPracticeDetails');
   const timer = document.getElementById('mindfulnessTimer');
   const instruction = document.getElementById('mindfulnessInstruction');
   const startButton = document.getElementById('mindfulnessStart');
   const stopButton = document.getElementById('mindfulnessStop');
   const status = document.getElementById('mindfulnessStatus');
   let intervalId = null;
-  let remaining = practices[practiceSelect.value].duration;
+  let remaining = 0;
   let displayedStep = -1;
+
+  function getSelectedDuration() {
+    const duration = Number(durationSelect.value);
+    return Number.isFinite(duration) && duration > 0
+      ? duration
+      : practices[practiceSelect.value].defaultDuration;
+  }
+
+  function formatDuration(seconds) {
+    if (seconds < 60) return `${seconds} segundos`;
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    if (remainingSeconds === 0) return `${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`;
+    return `${minutes} min ${remainingSeconds} s`;
+  }
+
+  function updatePracticeDetails() {
+    const practice = practices[practiceSelect.value];
+    practiceDetails.textContent = `Duração sugerida: ${practice.range}. Objetivo: ${practice.objective}`;
+    while (durationSelect.firstChild) {
+      durationSelect.removeChild(durationSelect.firstChild);
+    }
+    practice.durations.forEach((duration) => {
+      const option = document.createElement('option');
+      option.value = String(duration);
+      option.textContent = formatDuration(duration);
+      durationSelect.appendChild(option);
+    });
+    durationSelect.value = String(practice.defaultDuration);
+  }
 
   function render() {
     const practice = practices[practiceSelect.value];
-    const elapsed = practice.duration - remaining;
+    const duration = getSelectedDuration();
+    const elapsed = duration - remaining;
     const stepIndex = Math.min(
       practice.steps.length - 1,
-      Math.floor(elapsed / (practice.duration / practice.steps.length)),
+      Math.floor(elapsed / (duration / practice.steps.length)),
     );
     timer.textContent = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(remaining % 60).padStart(2, '0')}`;
     if (displayedStep !== stepIndex) {
       displayedStep = stepIndex;
-      instruction.textContent = practice.steps[stepIndex];
+      instruction.textContent = `Etapa ${stepIndex + 1} de ${practice.steps.length}: ${practice.steps[stepIndex]}`;
     }
     practiceSelect.disabled = Boolean(intervalId);
-    stopButton.disabled = !intervalId && remaining === practice.duration;
-    startButton.textContent = intervalId ? 'Pausar prática' : remaining < practice.duration && remaining > 0
+    durationSelect.disabled = Boolean(intervalId);
+    stopButton.disabled = !intervalId && remaining === duration;
+    startButton.textContent = intervalId ? 'Pausar prática' : remaining < duration && remaining > 0
       ? 'Continuar prática'
       : remaining === 0 ? 'Repetir prática' : 'Iniciar prática';
   }
@@ -942,12 +1068,19 @@ function setupMindfulness() {
   function reset() {
     window.clearInterval(intervalId);
     intervalId = null;
-    remaining = practices[practiceSelect.value].duration;
+    remaining = getSelectedDuration();
     displayedStep = -1;
     render();
   }
 
+  updatePracticeDetails();
+  remaining = getSelectedDuration();
   practiceSelect.addEventListener('change', () => {
+    updatePracticeDetails();
+    reset();
+    status.textContent = '';
+  });
+  durationSelect.addEventListener('change', () => {
     reset();
     status.textContent = '';
   });
@@ -960,7 +1093,7 @@ function setupMindfulness() {
       return;
     }
     if (remaining === 0) {
-      remaining = practices[practiceSelect.value].duration;
+      remaining = getSelectedDuration();
       displayedStep = -1;
       render();
     }
