@@ -3039,6 +3039,173 @@ body[data-theme="dark"] .planner-task-type-assignment {
   color: #b6efc8;
 }
 
+.dashboard-page .reminders-panel + .guided-break-panel,
+.dashboard-page .guided-break-panel + .mindfulness-panel,
+.dashboard-page .mindfulness-panel + .thought-record-panel,
+.dashboard-page .thought-record-panel + .journal-panel {
+  margin-top: 28px;
+}
+
+.mindfulness-panel,
+.thought-record-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.mindfulness-panel .panel-header,
+.thought-record-panel .panel-header {
+  margin: 0;
+}
+
+.mindfulness-panel > .muted-copy,
+.thought-record-panel > .muted-copy {
+  max-width: 780px;
+  margin: 0;
+}
+
+.mindfulness-instruction {
+  min-height: 4.5em;
+  margin: 0;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--panel-alt);
+  color: var(--text);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.mindfulness-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.mindfulness-controls > span {
+  min-width: 82px;
+  color: var(--secondary);
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+.mindfulness-controls .btn {
+  min-height: 48px;
+}
+
+.thought-record-form {
+  display: grid;
+  gap: 12px;
+  max-width: 900px;
+}
+
+.thought-record-form > label {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.thought-record-form input[type="range"] {
+  accent-color: var(--primary);
+}
+
+.thought-record-form label output {
+  display: inline-block;
+  min-width: 1.5em;
+  color: var(--primary-dark);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.thought-record-history {
+  margin-top: 8px;
+}
+
+.thought-record-history h3 {
+  margin: 0 0 14px;
+  font-size: 1rem;
+}
+
+.thought-record-entries {
+  display: grid;
+  gap: 14px;
+}
+
+.thought-record-entry {
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--panel-alt);
+  color: var(--text);
+}
+
+.thought-record-entry dl {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.8fr) minmax(0, 1.5fr);
+  gap: 9px 16px;
+  margin: 16px 0 0;
+}
+
+.thought-record-entry dt {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.thought-record-entry dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.project-credits {
+  margin-top: 18px;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.project-credits summary {
+  width: fit-content;
+  cursor: pointer;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.project-credits summary:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.project-credits-content {
+  max-width: 900px;
+  margin-top: 18px;
+}
+
+.project-credits-content > p {
+  margin: 0 0 8px;
+}
+
+.project-credits-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 32px;
+  margin: 10px 0 0;
+  padding-left: 24px;
+}
+
+.project-credits-list li {
+  padding-left: 3px;
+  overflow-wrap: anywhere;
+}
+
+body[data-theme="dark"] .mindfulness-instruction,
+body[data-theme="dark"] .thought-record-entry {
+  background: var(--panel-alt);
+  color: var(--text);
+}
+
 @media (max-width: 640px) {
   .flashcard-ratings {
     display: grid;
@@ -3056,6 +3223,33 @@ body[data-theme="dark"] .planner-task-type-assignment {
 
   .guided-break-controls .btn {
     flex: 1 1 140px;
+  }
+
+  .mindfulness-controls .btn {
+    flex: 1 1 150px;
+  }
+
+  .dashboard-page .reminders-panel + .guided-break-panel,
+  .dashboard-page .guided-break-panel + .mindfulness-panel,
+  .dashboard-page .mindfulness-panel + .thought-record-panel,
+  .dashboard-page .thought-record-panel + .journal-panel,
+  .dashboard-page .journal-panel + .preferences-panel,
+  .dashboard-page .preferences-panel + .privacy-panel {
+    margin-top: 20px;
+  }
+
+  .thought-record-entry dl {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .thought-record-entry dd + dt {
+    margin-top: 10px;
+  }
+
+  .project-credits-list {
+    grid-template-columns: 1fr;
+    gap: 6px;
   }
 }
 
@@ -3186,7 +3380,9 @@ body {
 .dashboard-page .trends-panel + .weekly-review,
 .dashboard-page .weekly-review + .reminders-panel,
 .dashboard-page .reminders-panel + .guided-break-panel,
-.dashboard-page .guided-break-panel + .journal-panel,
+.dashboard-page .guided-break-panel + .mindfulness-panel,
+.dashboard-page .mindfulness-panel + .thought-record-panel,
+.dashboard-page .thought-record-panel + .journal-panel,
 .dashboard-page .journal-panel + .preferences-panel,
 .dashboard-page .preferences-panel + .privacy-panel {
   margin-top: 28px;

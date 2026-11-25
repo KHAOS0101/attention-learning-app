@@ -1,4 +1,4 @@
-const CACHE_NAME = 'attention-learning-shell-v11';
+const CACHE_NAME = 'attention-learning-shell-v12';
 const APP_FILES = [
   'index.html',
   'cadastro.html',
