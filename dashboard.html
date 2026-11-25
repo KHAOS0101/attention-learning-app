@@ -321,6 +321,68 @@
             <p id="guidedBreakStatus" class="form-message" role="status" aria-live="polite"></p>
           </section>
 
+          <section class="panel mindfulness-panel" id="mindfulness" aria-labelledby="mindfulnessTitle">
+            <div class="panel-header">
+              <div><p class="eyebrow">Atenção ao momento presente</p><h2 id="mindfulnessTitle">Práticas guiadas de mindfulness</h2></div>
+            </div>
+            <p class="muted-copy">Escolha uma prática breve e siga as orientações no seu ritmo. Não é preciso esvaziar a mente nem controlar a respiração. Você pode pausar ou encerrar quando quiser.</p>
+            <label for="mindfulnessPractice">Escolha uma prática</label>
+            <select id="mindfulnessPractice">
+              <option value="breath">Observar a respiração · 2 minutos</option>
+              <option value="senses">Perceber os sentidos · 2 min e 30 s</option>
+              <option value="transition">Transição para o estudo · 2 minutos</option>
+            </select>
+            <p id="mindfulnessInstruction" class="mindfulness-instruction" aria-live="polite"></p>
+            <div class="mindfulness-controls">
+              <span id="mindfulnessTimer" aria-live="off">02:00</span>
+              <button class="btn btn-primary" id="mindfulnessStart" type="button">Iniciar prática</button>
+              <button class="btn btn-secondary" id="mindfulnessStop" type="button" disabled>Encerrar</button>
+            </div>
+            <p id="mindfulnessStatus" class="form-message" role="status" aria-live="polite"></p>
+            <p class="journal-privacy">Se alguma orientação causar desconforto, pare e volte sua atenção para algo que pareça seguro ou procure alguém de confiança. Estas práticas são educativas e não substituem cuidado profissional.</p>
+          </section>
+
+          <section class="panel thought-record-panel" id="thoughtRecords" aria-labelledby="thoughtRecordTitle">
+            <div class="panel-header">
+              <div><p class="eyebrow">Autoconhecimento · ferramenta opcional</p><h2 id="thoughtRecordTitle">Registro de pensamentos e emoções</h2></div>
+            </div>
+            <p class="muted-copy">Inspirado no registro de pensamentos da terapia cognitivo-comportamental (TCC), este roteiro ajuda a observar uma situação, os pensamentos que surgiram e outras perspectivas possíveis. Não é preciso invalidar o que você sente ou chegar a uma conclusão positiva.</p>
+            <form id="thoughtRecordForm" class="thought-record-form">
+              <label for="thoughtSituation">O que aconteceu? Descreva a situação de forma breve.</label>
+              <textarea id="thoughtSituation" name="situation" rows="2" maxlength="1000" placeholder="Ex.: Percebi que fiquei em dúvida durante uma atividade." required></textarea>
+
+              <label for="thoughtAutomatic">Que pensamento passou pela sua mente?</label>
+              <textarea id="thoughtAutomatic" name="thought" rows="2" maxlength="1000" placeholder="Escreva o pensamento como ele apareceu, sem se julgar." required></textarea>
+
+              <label for="thoughtEmotion">Que emoção você percebeu?</label>
+              <input id="thoughtEmotion" name="emotion" type="text" maxlength="100" placeholder="Ex.: preocupação, frustração, tranquilidade" required />
+
+              <label for="thoughtIntensityBefore">Qual era a intensidade dessa emoção? <output id="thoughtIntensityBeforeValue" for="thoughtIntensityBefore">3</output>/5</label>
+              <input id="thoughtIntensityBefore" name="intensityBefore" type="range" min="1" max="5" value="3" />
+
+              <label for="thoughtEvidenceFor">O que parece apoiar esse pensamento?</label>
+              <textarea id="thoughtEvidenceFor" name="evidenceFor" rows="2" maxlength="1000" placeholder="Considere apenas o que você observou, se quiser."></textarea>
+
+              <label for="thoughtEvidenceAgainst">Há algo que ofereça outra perspectiva?</label>
+              <textarea id="thoughtEvidenceAgainst" name="evidenceAgainst" rows="2" maxlength="1000" placeholder="Pode ser um detalhe que não tinha considerado ou uma possibilidade diferente."></textarea>
+
+              <label for="thoughtBalanced">Como você descreveria a situação de um jeito mais equilibrado e gentil consigo?</label>
+              <textarea id="thoughtBalanced" name="balancedThought" rows="2" maxlength="1000" placeholder="Não precisa ser positivo; busque uma formulação que considere o contexto." required></textarea>
+
+              <label for="thoughtIntensityAfter">E agora, qual é a intensidade da emoção? <output id="thoughtIntensityAfterValue" for="thoughtIntensityAfter">3</output>/5</label>
+              <input id="thoughtIntensityAfter" name="intensityAfter" type="range" min="1" max="5" value="3" />
+
+              <button class="btn btn-primary" type="submit">Guardar registro</button>
+              <p id="thoughtRecordMessage" class="form-message" role="status" aria-live="polite"></p>
+            </form>
+            <p class="journal-privacy">Seus registros ficam neste navegador, sem criptografia pelo app. Em um aparelho compartilhado, outras pessoas com acesso ao mesmo perfil podem vê-los. Este exercício educativo não é terapia, diagnóstico nem substitui acompanhamento profissional; você pode pular qualquer pergunta ou apagar os registros quando quiser.</p>
+            <div class="thought-record-history">
+              <h3>Seus registros</h3>
+              <div id="thoughtRecordEntries" class="thought-record-entries"></div>
+              <p id="thoughtRecordEmpty" class="empty-state">Seus registros aparecerão aqui. Você decide o que guardar.</p>
+            </div>
+          </section>
+
           <section class="panel journal-panel" id="personalJournal" aria-labelledby="journalTitle">
             <div class="panel-header">
               <div>
@@ -381,7 +443,7 @@
               <h2 id="privacyTitle">Seus dados são seus.</h2>
               <p>Este site não tem conta nem servidor: os dados ficam neste navegador, não são enviados à equipe e não sincronizam entre dispositivos. O armazenamento local não é criptografado pelo app; em um aparelho compartilhado, outras pessoas com acesso ao seu perfil do navegador podem ver os registros. Use o bloqueio de tela do dispositivo e evite salvar conteúdo sensível.</p>
               <p>Uma senha no site, sem criptografia real, daria uma falsa impressão de proteção. Sincronização segura entre dispositivos também exige um backend, autenticação e revisão de segurança — por isso não é ativada neste protótipo.</p>
-              <p>Exportar baixa um backup JSON. Restaurar substitui os dados atuais; apagar remove perfil, metas, tarefas, registros, diário e grupos deste navegador.</p>
+              <p>Exportar baixa um backup JSON. Restaurar substitui os dados atuais; apagar remove perfil, metas, tarefas, registros de pensamentos e emoções, diário e grupos deste navegador.</p>
             </div>
             <div class="privacy-actions">
               <button class="btn btn-secondary" id="exportData" type="button">Exportar meus dados</button>
@@ -389,7 +451,7 @@
               <input id="importDataFile" class="visually-hidden" type="file" accept=".json,application/json" aria-label="Escolher arquivo JSON de exportação" />
               <button class="btn btn-danger" id="deleteData" type="button">Apagar todos os meus dados</button>
             </div>
-            <p class="form-message" id="privacyMessage" role="status" aria-live="polite">Você também pode apagar registros do diário individualmente, usando o botão “Apagar” em cada texto.</p>
+            <p class="form-message" id="privacyMessage" role="status" aria-live="polite">Você também pode apagar registros do diário e de pensamentos individualmente, usando o botão “Apagar” em cada registro.</p>
           </section>
         </div>
       </section>
@@ -402,6 +464,7 @@
         <ol>
           <li><strong>Planeje uma tarefa pequena</strong><span>Escolha um dia e um próximo passo possível.</span></li>
           <li><strong>Observe seu ritmo</strong><span>Se quiser, registre humor, sono e foco — sem metas ideais.</span></li>
+          <li><strong>Faça uma pausa ou reflita</strong><span>Explore uma prática breve de mindfulness ou o roteiro opcional de pensamentos e emoções.</span></li>
           <li><strong>Busque apoio quando precisar</strong><span>A página de apoio reúne recursos externos no Brasil.</span></li>
         </ol>
         <p class="muted-copy">Seus dados ficam neste navegador. O site é educativo e não substitui cuidado psicológico.</p>
@@ -409,7 +472,32 @@
       </div>
     </dialog>
     <footer class="site-footer">
-      <div class="container footer-row"><p>© <span data-current-year></span> Attention Learning</p><p>Seu ritmo também é progresso.</p><a href="apoio.html">Encontrar apoio</a></div>
+      <div class="container">
+        <div class="footer-row"><p>© <span data-current-year></span> Attention Learning</p><p>Seu ritmo também é progresso.</p><a href="apoio.html">Encontrar apoio</a></div>
+        <details class="project-credits">
+          <summary>Integrantes e orientação · Neurociência e Comportamento</summary>
+          <div class="project-credits-content">
+            <p><strong>Professora orientadora:</strong> Ailla Pacheco</p>
+            <p><strong>Integrantes do grupo:</strong></p>
+            <ol class="project-credits-list">
+              <li>Kayte Leticia Azevedo Pires</li>
+              <li>Ana Luiza Souza Fidelis</li>
+              <li>Luiza Darley da Silva Lopes</li>
+              <li>Maria Eduarda Germano Lança</li>
+              <li>Mateus Pereira Gonçalves</li>
+              <li>Mateus Trindade Vilela de Campos</li>
+              <li>Matheus Afonso de Paiva</li>
+              <li>Moises Galan Ramos Cobo</li>
+              <li>Myrella Viega Trindade</li>
+              <li>Míriam de Jesus Silva</li>
+              <li>Natalia Elen Machado</li>
+              <li>Natalia Lidia Silva Mello</li>
+              <li>Natália Maria Teixeira da Silva</li>
+              <li>Priscielly Patrícia Oliveira Araújo</li>
+            </ol>
+          </div>
+        </details>
+      </div>
     </footer>
     <script src="script.js"></script>
   </body>

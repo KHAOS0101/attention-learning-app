@@ -8,6 +8,7 @@ const initialState = {
   goalsDate: todayKey(),
   dailyLogs: {},
   journalEntries: [],
+  thoughtRecords: [],
   joinedGroups: [],
   pomodoro: { focusMinutes: 25, breakMinutes: 5 },
   reminders: { enabled: false, intervalMinutes: 60, nextReminderAt: null },
@@ -141,6 +142,32 @@ function readState() {
     dailyLogs: parsed.dailyLogs || {},
     journalEntries: Array.isArray(parsed.journalEntries)
       ? parsed.journalEntries.filter((entry) => entry && typeof entry.id === 'string' && typeof entry.text === 'string' && typeof entry.createdAt === 'string')
+      : [],
+    thoughtRecords: Array.isArray(parsed.thoughtRecords)
+      ? parsed.thoughtRecords.filter((record) => record && typeof record.id === 'string' && record.id.length > 0 && record.id.length <= 100
+        && typeof record.situation === 'string' && record.situation.trim().length > 0 && record.situation.length <= 1000
+        && typeof record.thought === 'string' && record.thought.trim().length > 0 && record.thought.length <= 1000
+        && typeof record.emotion === 'string' && record.emotion.trim().length > 0 && record.emotion.length <= 100
+        && Number.isInteger(record.intensityBefore) && record.intensityBefore >= 1 && record.intensityBefore <= 5
+        && typeof record.evidenceFor === 'string' && record.evidenceFor.length <= 1000
+        && typeof record.evidenceAgainst === 'string' && record.evidenceAgainst.length <= 1000
+        && typeof record.balancedThought === 'string' && record.balancedThought.trim().length > 0
+        && record.balancedThought.length <= 1000
+        && Number.isInteger(record.intensityAfter) && record.intensityAfter >= 1 && record.intensityAfter <= 5
+        && typeof record.createdAt === 'string' && !Number.isNaN(Date.parse(record.createdAt)))
+        .map((record) => ({
+          id: record.id,
+          situation: record.situation,
+          thought: record.thought,
+          emotion: record.emotion,
+          intensityBefore: record.intensityBefore,
+          evidenceFor: record.evidenceFor,
+          evidenceAgainst: record.evidenceAgainst,
+          balancedThought: record.balancedThought,
+          intensityAfter: record.intensityAfter,
+          createdAt: record.createdAt,
+        }))
+        .slice(0, 5000)
       : [],
     sessions: Array.isArray(parsed.sessions)
       ? parsed.sessions.filter((session) => session && isValidDateKey(session.date)
@@ -398,6 +425,8 @@ function setupDashboard() {
   setupFlashcards();
   setupSessionReflections();
   setupGuidedBreaks();
+  setupMindfulness();
+  setupThoughtRecords();
   setupWeeklyReview();
   setupPreferences();
   setupOnboarding();
@@ -848,6 +877,238 @@ function setupGuidedBreaks() {
   setInstructions();
 }
 
+function setupMindfulness() {
+  const practiceSelect = document.getElementById('mindfulnessPractice');
+  if (!practiceSelect) return;
+
+  const practices = {
+    breath: {
+      duration: 120,
+      steps: [
+        'Acomode-se como for confortável. Você pode manter os olhos abertos e notar o apoio do corpo.',
+        'Perceba a respiração como ela está, sem tentar mudá-la. Se preferir, escolha um som ou ponto de contato como foco.',
+        'Quando notar que a atenção se afastou, reconheça isso com gentileza e volte ao ponto que escolheu.',
+        'Observe mais um instante. Não é preciso esvaziar a mente nem fazer a prática de um jeito perfeito.',
+      ],
+    },
+    senses: {
+      duration: 150,
+      steps: [
+        'Olhe ao redor e note algumas cores, formas ou detalhes que chamem sua atenção.',
+        'Perceba os sons próximos ou distantes, sem precisar identificá-los todos.',
+        'Note os pontos em que o corpo toca a cadeira, o chão ou outra superfície.',
+        'Se for confortável, perceba algum cheiro ou sabor presente; não é necessário procurar.',
+        'Olhe ao redor novamente e escolha um próximo passo pequeno para o seu momento.',
+      ],
+    },
+    transition: {
+      duration: 120,
+      steps: [
+        'Faça uma pausa e perceba como está sua postura, sem exigir que ela mude.',
+        'Note o ambiente ao redor e escolha um detalhe para observar por alguns instantes.',
+        'Pense em uma tarefa pequena que gostaria de iniciar ou retomar, sem se cobrar por concluí-la.',
+        'Quando estiver pronto, volte a atenção para esse primeiro passo. Você também pode escolher descansar.',
+      ],
+    },
+  };
+  const timer = document.getElementById('mindfulnessTimer');
+  const instruction = document.getElementById('mindfulnessInstruction');
+  const startButton = document.getElementById('mindfulnessStart');
+  const stopButton = document.getElementById('mindfulnessStop');
+  const status = document.getElementById('mindfulnessStatus');
+  let intervalId = null;
+  let remaining = practices[practiceSelect.value].duration;
+  let displayedStep = -1;
+
+  function render() {
+    const practice = practices[practiceSelect.value];
+    const elapsed = practice.duration - remaining;
+    const stepIndex = Math.min(
+      practice.steps.length - 1,
+      Math.floor(elapsed / (practice.duration / practice.steps.length)),
+    );
+    timer.textContent = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(remaining % 60).padStart(2, '0')}`;
+    if (displayedStep !== stepIndex) {
+      displayedStep = stepIndex;
+      instruction.textContent = practice.steps[stepIndex];
+    }
+    practiceSelect.disabled = Boolean(intervalId);
+    stopButton.disabled = !intervalId && remaining === practice.duration;
+    startButton.textContent = intervalId ? 'Pausar prática' : remaining < practice.duration && remaining > 0
+      ? 'Continuar prática'
+      : remaining === 0 ? 'Repetir prática' : 'Iniciar prática';
+  }
+
+  function reset() {
+    window.clearInterval(intervalId);
+    intervalId = null;
+    remaining = practices[practiceSelect.value].duration;
+    displayedStep = -1;
+    render();
+  }
+
+  practiceSelect.addEventListener('change', () => {
+    reset();
+    status.textContent = '';
+  });
+  startButton.addEventListener('click', () => {
+    if (intervalId) {
+      window.clearInterval(intervalId);
+      intervalId = null;
+      status.textContent = 'Prática pausada. Você pode continuar ou encerrar quando quiser.';
+      render();
+      return;
+    }
+    if (remaining === 0) {
+      remaining = practices[practiceSelect.value].duration;
+      displayedStep = -1;
+      render();
+    }
+    status.textContent = 'Prática iniciada. Você pode pausar ou parar a qualquer momento.';
+    intervalId = window.setInterval(() => {
+      remaining -= 1;
+      render();
+      if (remaining <= 0) {
+        window.clearInterval(intervalId);
+        intervalId = null;
+        status.textContent = 'Prática concluída. Continue no seu ritmo ou encerre por aqui.';
+        render();
+      }
+    }, 1000);
+    render();
+  });
+  stopButton.addEventListener('click', () => {
+    reset();
+    status.textContent = 'Prática encerrada. Está tudo bem parar ou escolher outra atividade.';
+  });
+  reset();
+}
+
+function setupThoughtRecords() {
+  const form = document.getElementById('thoughtRecordForm');
+  if (!form) return;
+
+  const fields = {
+    situation: document.getElementById('thoughtSituation'),
+    thought: document.getElementById('thoughtAutomatic'),
+    emotion: document.getElementById('thoughtEmotion'),
+    intensityBefore: document.getElementById('thoughtIntensityBefore'),
+    evidenceFor: document.getElementById('thoughtEvidenceFor'),
+    evidenceAgainst: document.getElementById('thoughtEvidenceAgainst'),
+    balancedThought: document.getElementById('thoughtBalanced'),
+    intensityAfter: document.getElementById('thoughtIntensityAfter'),
+  };
+  const message = document.getElementById('thoughtRecordMessage');
+  const updateIntensityLabels = () => {
+    document.getElementById('thoughtIntensityBeforeValue').textContent = fields.intensityBefore.value;
+    document.getElementById('thoughtIntensityAfterValue').textContent = fields.intensityAfter.value;
+  };
+  fields.intensityBefore.addEventListener('input', updateIntensityLabels);
+  fields.intensityAfter.addEventListener('input', updateIntensityLabels);
+  updateIntensityLabels();
+  renderThoughtRecords();
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const record = {
+      id: `thought-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      situation: fields.situation.value.trim(),
+      thought: fields.thought.value.trim(),
+      emotion: fields.emotion.value.trim(),
+      intensityBefore: Number(fields.intensityBefore.value),
+      evidenceFor: fields.evidenceFor.value.trim(),
+      evidenceAgainst: fields.evidenceAgainst.value.trim(),
+      balancedThought: fields.balancedThought.value.trim(),
+      intensityAfter: Number(fields.intensityAfter.value),
+      createdAt: new Date().toISOString(),
+    };
+    if (!record.situation || record.situation.length > 1000
+      || !record.thought || record.thought.length > 1000
+      || !record.emotion || record.emotion.length > 100
+      || !Number.isInteger(record.intensityBefore) || record.intensityBefore < 1 || record.intensityBefore > 5
+      || record.evidenceFor.length > 1000 || record.evidenceAgainst.length > 1000
+      || !record.balancedThought || record.balancedThought.length > 1000
+      || !Number.isInteger(record.intensityAfter) || record.intensityAfter < 1 || record.intensityAfter > 5) {
+      message.textContent = 'Confira os campos obrigatórios e tente salvar novamente.';
+      return;
+    }
+    if (state.thoughtRecords.length >= 5000) {
+      message.textContent = 'Você atingiu o limite de registros. Apague alguns para guardar outros.';
+      return;
+    }
+
+    state.thoughtRecords.unshift(record);
+    if (!saveState()) {
+      state.thoughtRecords.shift();
+      return;
+    }
+    form.reset();
+    updateIntensityLabels();
+    message.textContent = 'Registro guardado somente neste navegador.';
+    renderThoughtRecords();
+  });
+
+  document.getElementById('thoughtRecordEntries').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-delete-thought-record]');
+    if (!button) return;
+    if (!window.confirm('Apagar este registro de pensamentos? Esta ação não pode ser desfeita.')) return;
+    const previousRecords = state.thoughtRecords;
+    state.thoughtRecords = previousRecords.filter((record) => record.id !== button.dataset.deleteThoughtRecord);
+    if (saveState()) {
+      renderThoughtRecords();
+      message.textContent = 'Registro apagado.';
+    } else {
+      state.thoughtRecords = previousRecords;
+    }
+  });
+}
+
+function renderThoughtRecords() {
+  const container = document.getElementById('thoughtRecordEntries');
+  if (!container) return;
+  container.replaceChildren();
+  document.getElementById('thoughtRecordEmpty').hidden = state.thoughtRecords.length > 0;
+
+  state.thoughtRecords.forEach((record) => {
+    const article = document.createElement('article');
+    article.className = 'thought-record-entry';
+    const header = document.createElement('div');
+    header.className = 'journal-entry-header';
+    const date = document.createElement('time');
+    const createdAt = new Date(record.createdAt);
+    date.dateTime = Number.isNaN(createdAt.getTime()) ? '' : createdAt.toISOString();
+    date.textContent = Number.isNaN(createdAt.getTime())
+      ? 'Registro anterior'
+      : new Intl.DateTimeFormat('pt-BR', { dateStyle: 'medium', timeStyle: 'short' }).format(createdAt);
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.className = 'remove-goal-button';
+    deleteButton.dataset.deleteThoughtRecord = record.id;
+    deleteButton.setAttribute('aria-label', `Apagar registro de pensamentos de ${date.textContent}`);
+    deleteButton.textContent = 'Apagar';
+    header.append(date, deleteButton);
+
+    const details = document.createElement('dl');
+    [
+      ['Situação', record.situation],
+      ['Pensamento que surgiu', record.thought],
+      ['Emoção percebida', `${record.emotion} · intensidade antes: ${record.intensityBefore}/5`],
+      ['O que parece apoiar esse pensamento', record.evidenceFor || 'Não preenchido'],
+      ['O que pode oferecer outra perspectiva', record.evidenceAgainst || 'Não preenchido'],
+      ['Pensamento alternativo mais equilibrado', record.balancedThought],
+      ['Intensidade percebida depois', `${record.intensityAfter}/5`],
+    ].forEach(([label, value]) => {
+      const term = document.createElement('dt');
+      term.textContent = label;
+      const description = document.createElement('dd');
+      description.textContent = value;
+      details.append(term, description);
+    });
+    article.append(header, details);
+    container.append(article);
+  });
+}
+
 function setupWeeklyReview() {
   renderWeeklyReview();
 }
@@ -956,6 +1217,8 @@ function setupResourceSearch() {
     { title: 'Gráficos e tendências', keywords: 'histórico gráfico evolução progresso', href: '#progressTrends' },
     { title: 'Resumo semanal', keywords: 'semana resumo revisar reflexão tarefas', href: '#weeklyReview' },
     { title: 'Escrita livre e diário', keywords: 'desabafo opinião escrever diário', href: '#personalJournal' },
+    { title: 'Práticas guiadas de mindfulness', keywords: 'mindfulness atenção plena presença sentidos respiração', href: '#mindfulness' },
+    { title: 'Registro de pensamentos e emoções (TCC)', keywords: 'terapia cognitivo-comportamental pensamento automático emoção intensidade perspectiva', href: '#thoughtRecords' },
     { title: 'Lembretes de pausa', keywords: 'notificação descanso intervalo', href: '#breakReminders' },
     { title: 'Pausas guiadas', keywords: 'respiração alongamento olhos relaxar', href: '#guidedBreaks' },
     { title: 'Aparência e acessibilidade', keywords: 'tema escuro contraste texto leitura acessibilidade', href: '#personalization' },
@@ -999,7 +1262,7 @@ function setupPrivacyControls() {
     try {
       const exportData = {
         app: 'Attention Learning',
-        version: 3,
+        version: 4,
         exportedAt: new Date().toISOString(),
         note: 'Exportação de dados armazenados localmente pelo protótipo.',
         data: state,
@@ -1079,7 +1342,7 @@ function validateBackup(backup) {
     && new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value;
 
   if (!isObject(backup) || backup.app !== 'Attention Learning'
-    || ![undefined, 1, 2, 3].includes(backup.version) || !isObject(backup.data)) {
+    || ![undefined, 1, 2, 3, 4].includes(backup.version) || !isObject(backup.data)) {
     throw invalid();
   }
   const data = backup.data;
@@ -1158,6 +1421,34 @@ function validateBackup(backup) {
         || !entry.text.trim() || entry.text.length > 3000 || typeof entry.createdAt !== 'string'
         || Number.isNaN(Date.parse(entry.createdAt)))) throw invalid();
     result.journalEntries = data.journalEntries.map(({ id, text, createdAt }) => ({ id, text, createdAt }));
+  }
+
+  if (data.thoughtRecords !== undefined) {
+    if (!Array.isArray(data.thoughtRecords) || data.thoughtRecords.length > 5000
+      || data.thoughtRecords.some((record) => !isObject(record) || typeof record.id !== 'string'
+        || !record.id || record.id.length > 100 || typeof record.situation !== 'string'
+        || !record.situation.trim() || record.situation.length > 1000
+        || typeof record.thought !== 'string' || !record.thought.trim() || record.thought.length > 1000
+        || typeof record.emotion !== 'string' || !record.emotion.trim() || record.emotion.length > 100
+        || !Number.isInteger(record.intensityBefore) || record.intensityBefore < 1 || record.intensityBefore > 5
+        || typeof record.evidenceFor !== 'string' || record.evidenceFor.length > 1000
+        || typeof record.evidenceAgainst !== 'string' || record.evidenceAgainst.length > 1000
+        || typeof record.balancedThought !== 'string' || !record.balancedThought.trim()
+        || record.balancedThought.length > 1000
+        || !Number.isInteger(record.intensityAfter) || record.intensityAfter < 1 || record.intensityAfter > 5
+        || typeof record.createdAt !== 'string' || Number.isNaN(Date.parse(record.createdAt)))) throw invalid();
+    result.thoughtRecords = data.thoughtRecords.map((record) => ({
+      id: record.id,
+      situation: record.situation,
+      thought: record.thought,
+      emotion: record.emotion,
+      intensityBefore: record.intensityBefore,
+      evidenceFor: record.evidenceFor,
+      evidenceAgainst: record.evidenceAgainst,
+      balancedThought: record.balancedThought,
+      intensityAfter: record.intensityAfter,
+      createdAt: record.createdAt,
+    }));
   }
 
   if (data.joinedGroups !== undefined) {

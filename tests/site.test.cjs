@@ -110,6 +110,86 @@ test('version 3 backups restore flashcards, task types, and session reflections'
   assert.deepEqual(restored.sessions[0].reflection, backup.data.sessions[0].reflection);
 });
 
+test('version 4 backups restore CBT-inspired thought and emotion records', () => {
+  const context = createAppContext();
+  const thoughtRecord = {
+    id: 'thought-1',
+    situation: 'Fiquei em dúvida durante uma atividade.',
+    thought: 'Não vou conseguir aprender este conteúdo.',
+    emotion: 'Ansiedade',
+    intensityBefore: 4,
+    evidenceFor: 'Ainda não terminei os exercícios.',
+    evidenceAgainst: 'Já compreendi outras partes e posso pedir ajuda.',
+    balancedThought: 'Estou aprendendo aos poucos e posso retomar uma parte por vez.',
+    intensityAfter: 3,
+    createdAt: '2026-11-10T12:00:00.000Z',
+  };
+  const backup = makeBackup({ thoughtRecords: [thoughtRecord] });
+  backup.version = 4;
+
+  const restored = validate(context, backup);
+  assert.deepEqual(restored.thoughtRecords, [thoughtRecord]);
+});
+
+test('backup validation rejects malformed thought records and accepts legacy backups', () => {
+  const context = createAppContext();
+  const validRecord = {
+    id: 'thought-1',
+    situation: 'Uma situação.',
+    thought: 'Um pensamento.',
+    emotion: 'Preocupação',
+    intensityBefore: 3,
+    evidenceFor: '',
+    evidenceAgainst: '',
+    balancedThought: 'Uma perspectiva possível.',
+    intensityAfter: 2,
+    createdAt: '2026-11-10T12:00:00.000Z',
+  };
+
+  for (const changes of [
+    { intensityBefore: 0 },
+    { intensityAfter: 6 },
+    { balancedThought: '' },
+    { createdAt: 'data inválida' },
+    { thought: 'a'.repeat(1001) },
+  ]) {
+    assert.throws(() => validate(context, makeBackup({
+      thoughtRecords: [{ ...validRecord, ...changes }],
+    })), /backup válido/);
+  }
+
+  const legacyBackup = makeBackup();
+  legacyBackup.version = 3;
+  assert.deepEqual(validate(context, legacyBackup).thoughtRecords, []);
+});
+
+test('all site pages include the requested course credits', () => {
+  const pages = ['index.html', 'dashboard.html', 'comunidade.html', 'cadastro.html', 'apoio.html'];
+  const names = [
+    'Ailla Pacheco',
+    'Kayte Leticia Azevedo Pires',
+    'Ana Luiza Souza Fidelis',
+    'Luiza Darley da Silva Lopes',
+    'Maria Eduarda Germano Lança',
+    'Mateus Pereira Gonçalves',
+    'Mateus Trindade Vilela de Campos',
+    'Matheus Afonso de Paiva',
+    'Moises Galan Ramos Cobo',
+    'Myrella Viega Trindade',
+    'Míriam de Jesus Silva',
+    'Natalia Elen Machado',
+    'Natalia Lidia Silva Mello',
+    'Natália Maria Teixeira da Silva',
+    'Priscielly Patrícia Oliveira Araújo',
+  ];
+
+  pages.forEach((page) => {
+    const html = fs.readFileSync(path.join(__dirname, '..', page), 'utf8');
+    assert.match(html, /Integrantes e orientação · Neurociência e Comportamento/);
+    names.forEach((name) => assert.ok(html.includes(name), `${name} is missing from ${page}`));
+  });
+});
+
 test('flashcard ratings schedule increasing recall intervals and retry missed cards tomorrow', () => {
   const context = createAppContext();
   context.cardInput = JSON.stringify({
