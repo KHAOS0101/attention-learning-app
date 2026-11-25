@@ -163,6 +163,39 @@ test('backup validation rejects malformed thought records and accepts legacy bac
   assert.deepEqual(validate(context, legacyBackup).thoughtRecords, []);
 });
 
+test('dashboard offers ten guided mindfulness practices with adjustable beginner instructions', () => {
+  const dashboard = fs.readFileSync(path.join(__dirname, '..', 'dashboard.html'), 'utf8');
+  const practiceSelect = dashboard.match(/<select id="mindfulnessPractice">([\s\S]*?)<\/select>/);
+  assert.ok(practiceSelect, 'mindfulness practice selector is missing');
+
+  const practiceIds = [...practiceSelect[1].matchAll(/<option value="([^"]+)">/g)]
+    .map(([, value]) => value);
+  assert.deepEqual(practiceIds, [
+    'breath',
+    'paced-breath',
+    'body-scan',
+    'sounds',
+    'belly-breath',
+    'daily-activity',
+    'emotions',
+    'gratitude',
+    'thought-clouds',
+    'mindful-pause',
+  ]);
+  assert.match(dashboard, /<label for="mindfulnessDuration">Duração da prática<\/label>/);
+  assert.match(dashboard, /<option value="240" selected>4 minutos<\/option>/);
+
+  const practiceDefinitions = appScript.match(/const practices = \{([\s\S]*?)\r?\n  \};\r?\n  const durationSelect/);
+  assert.ok(practiceDefinitions, 'mindfulness practice instructions are missing');
+  const configuredIds = [...practiceDefinitions[1].matchAll(/^[ \t]{4}(?:'([^']+)'|([a-z-]+)): \{/gm)]
+    .map(([, quoted, plain]) => quoted || plain);
+  assert.deepEqual(configuredIds, practiceIds);
+  assert.equal((practiceDefinitions[1].match(/\brange:/g) || []).length, 10);
+  assert.equal((practiceDefinitions[1].match(/\bobjective:/g) || []).length, 10);
+  assert.equal((practiceDefinitions[1].match(/\bdurations:/g) || []).length, 10);
+  assert.equal((practiceDefinitions[1].match(/\bsteps: \[/g) || []).length, 10);
+});
+
 test('all site pages include the requested course credits', () => {
   const pages = ['index.html', 'dashboard.html', 'comunidade.html', 'cadastro.html', 'apoio.html'];
   const names = [

@@ -325,16 +325,30 @@
             <div class="panel-header">
               <div><p class="eyebrow">Atenção ao momento presente</p><h2 id="mindfulnessTitle">Práticas guiadas de mindfulness</h2></div>
             </div>
-            <p class="muted-copy">Escolha uma prática breve e siga as orientações no seu ritmo. Não é preciso esvaziar a mente nem controlar a respiração. Você pode pausar ou encerrar quando quiser.</p>
+            <p class="muted-copy">Escolha uma prática e uma duração dentro da faixa sugerida. As etapas aparecem ao longo do temporizador; leia com calma, sem buscar fazer tudo perfeitamente. Na respiração 4–6, não prenda nem force o ar: se a contagem incomodar, volte à respiração natural. Você pode pausar ou encerrar quando quiser.</p>
             <label for="mindfulnessPractice">Escolha uma prática</label>
             <select id="mindfulnessPractice">
-              <option value="breath">Observar a respiração · 2 minutos</option>
-              <option value="senses">Perceber os sentidos · 2 min e 30 s</option>
-              <option value="transition">Transição para o estudo · 2 minutos</option>
+              <option value="breath">Respiração consciente</option>
+              <option value="paced-breath">Respiração 4–6</option>
+              <option value="body-scan">Escaneamento corporal</option>
+              <option value="sounds">Atenção aos sons</option>
+              <option value="belly-breath">Respiração no abdômen</option>
+              <option value="daily-activity">Mindfulness na atividade cotidiana</option>
+              <option value="emotions">Atenção às emoções</option>
+              <option value="gratitude">Meditação da gratidão</option>
+              <option value="thought-clouds">Pensamentos como nuvens</option>
+              <option value="mindful-pause">Pausa consciente</option>
             </select>
+            <label for="mindfulnessDuration">Duração da prática</label>
+            <select id="mindfulnessDuration">
+              <option value="180">3 minutos</option>
+              <option value="240" selected>4 minutos</option>
+              <option value="300">5 minutos</option>
+            </select>
+            <p id="mindfulnessPracticeDetails" class="muted-copy" aria-live="polite"></p>
             <p id="mindfulnessInstruction" class="mindfulness-instruction" aria-live="polite"></p>
             <div class="mindfulness-controls">
-              <span id="mindfulnessTimer" aria-live="off">02:00</span>
+              <span id="mindfulnessTimer" aria-live="off">04:00</span>
               <button class="btn btn-primary" id="mindfulnessStart" type="button">Iniciar prática</button>
               <button class="btn btn-secondary" id="mindfulnessStop" type="button" disabled>Encerrar</button>
             </div>
