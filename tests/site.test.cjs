@@ -166,17 +166,16 @@ test('backup validation rejects malformed thought records and accepts legacy bac
 test('all site pages include the requested course credits', () => {
   const pages = ['index.html', 'dashboard.html', 'comunidade.html', 'cadastro.html', 'apoio.html'];
   const names = [
-    'Ailla Pacheco',
-    'Kayte Leticia Azevedo Pires',
     'Ana Luiza Souza Fidelis',
+    'Kayte Leticia Azevedo Pires',
     'Luiza Darley da Silva Lopes',
     'Maria Eduarda Germano Lança',
     'Mateus Pereira Gonçalves',
     'Mateus Trindade Vilela de Campos',
     'Matheus Afonso de Paiva',
+    'Míriam de Jesus Silva',
     'Moises Galan Ramos Cobo',
     'Myrella Viega Trindade',
-    'Míriam de Jesus Silva',
     'Natalia Elen Machado',
     'Natalia Lidia Silva Mello',
     'Natália Maria Teixeira da Silva',
@@ -186,6 +185,15 @@ test('all site pages include the requested course credits', () => {
   pages.forEach((page) => {
     const html = fs.readFileSync(path.join(__dirname, '..', page), 'utf8');
     assert.match(html, /Integrantes e orientação · Neurociência e Comportamento/);
+    assert.match(html, /Professora orientadora:<\/strong> Ailla Pacheco/);
+    const list = html.match(/<ul class="project-credits-list">([\s\S]*?)<\/ul>/);
+    assert.ok(list, `unordered group list is missing from ${page}`);
+    assert.doesNotMatch(html, /<ol class="project-credits-list">/);
+    assert.deepEqual(
+      [...list[1].matchAll(/<li>(.*?)<\/li>/g)].map(([, name]) => name),
+      names,
+      `${page} should list group members alphabetically without numbering`,
+    );
     names.forEach((name) => assert.ok(html.includes(name), `${name} is missing from ${page}`));
   });
 });
